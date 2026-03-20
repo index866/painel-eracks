@@ -26,9 +26,12 @@
     <div class="grid">
         {% for pedido in pedidos %}
         <div class="card">
-            <h3>Pedido #{{ pedido.numero or pedido.numero_pedido }}</h3>
-            <p><strong>Cliente:</strong> {{ pedido.cliente_exibicao or 'Verificar no Tiny' }}</p>
-            <p><strong>Status:</strong> <span class="status">{{ pedido.situacao or pedido.status }}</span></p>
+            <h3>Pedido #{{ pedido.numero or pedido.numero_pedido or '---' }}</h3>
+            
+            <p><strong>Cliente:</strong> {{ pedido.cliente_exibicao or pedido.cliente or 'Verificar no Tiny' }}</p>
+            
+            <p><strong>Status:</strong> <span class="status">{{ pedido.situacao or pedido.status or 'EM PROCESSAMENTO' }}</span></p>
+            
             <p><small>🕒 Atualizado às: {{ pedido.ultima_atualizacao }}</small></p>
         </div>
         {% else %}
