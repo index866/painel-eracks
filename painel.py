@@ -22,53 +22,65 @@ def salvar_pedidos(pedidos):
 @app.route('/')
 def index():
     pedidos = carregar_pedidos()
-    # Mantém a contagem de pendentes para o seu painel
-    total_pendentes = len(pedidos)
-    agora = datetime.now().strftime('%H:%M:%S')
-    return render_template('index.html', pedidos=pedidos, total=total_pendentes, hora=agora)
+    # Ordena: os que atualizaram por último aparecem primeiro
+    pedidos_ordenados = sorted(pedidos, key=lambda x: x.get('ultima_atualizacao', ''), reverse=True)
+    return render_template('index.html', pedidos=pedidos_ordenados)
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
     try:
         dados = request.get_json(silent=True)
         if not dados:
-            return jsonify({"status": "error"}), 200
+            return jsonify({"status": "error", "msg": "JSON vazio"}), 200
 
-        # Identificação e Status
+        # Extração flexível de dados (aceita várias versões do Tiny)
         numero = str(dados.get('numero') or dados.get('numero_pedido') or '')
-        status = str(dados.get('situacao') or dados.get('status') or '').lower()
+        status_bruto = str(dados.get('situacao') or dados.get('status') or '').lower()
+        
+        # Extração do nome do cliente (Tenta objeto ou string direta)
+        cliente_data = dados.get('cliente', {})
+        if isinstance(cliente_data, dict):
+            nome_cliente = cliente_data.get('nome', 'Cliente s/ Nome')
+        else:
+            nome_cliente = str(cliente_data)
 
         if not numero:
-            return jsonify({"status": "error"}), 200
+            return jsonify({"status": "error", "msg": "Pedido sem numero"}), 200
 
         pedidos = carregar_pedidos()
 
-        # LISTA DE REMOÇÃO (Se o Tiny mandar um desses, o pedido SAI da tela)
-        status_para_sair = ['cancelado', 'faturado', 'atendido', 'concluido', 'despachado']
+        # LISTA DE STATUS QUE FAZEM O PEDIDO SUMIR DA TELA
+        status_remover = ['cancelado', 'faturado', 'atendido', 'concluido', 'despachado', 'entregue']
 
-        if any(s in status for s in status_para_sair):
+        if any(s in status_bruto for s in status_remover):
+            # Remove o pedido da lista se ele for faturado ou cancelado
             pedidos = [p for p in pedidos if str(p.get('numero') or p.get('numero_pedido')) != numero]
+            print(f">>> [REMOVIDO] Pedido {numero} saiu da tela (Status: {status_bruto})")
         else:
-            # ATUALIZA OU ADICIONA (Se for Aberto, Preparando, etc)
+            # Atualiza ou Adiciona se for um status ativo (Aberto, Preparando, etc)
+            agora = datetime.now().strftime('%H:%M')
             encontrado = False
             for p in pedidos:
                 if str(p.get('numero') or p.get('numero_pedido')) == numero:
                     p.update(dados)
-                    p['ultima_atualizacao'] = datetime.now().strftime('%H:%M')
+                    p['cliente_exibicao'] = nome_cliente # Padroniza o nome
+                    p['ultima_atualizacao'] = agora
                     encontrado = True
                     break
+            
             if not encontrado:
-                dados['ultima_atualizacao'] = datetime.now().strftime('%H:%M')
+                dados['cliente_exibicao'] = nome_cliente
+                dados['ultima_atualizacao'] = agora
                 pedidos.append(dados)
+            print(f">>> [ATIVO] Pedido {numero} atualizado (Status: {status_bruto})")
 
         salvar_pedidos(pedidos)
         return jsonify({"status": "success"}), 200
 
     except Exception as e:
-        print(f"Erro: {e}")
-        return jsonify({"status": "error"}), 200
+        print(f"ERRO WEBHOOK: {e}")
+        return jsonify({"status": "error", "msg": str(e)}), 200
 
 if __name__ == '__main__':
-    # O Render usa a porta 10000
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
