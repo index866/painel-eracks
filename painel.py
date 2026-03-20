@@ -22,64 +22,57 @@ def salvar_pedidos(pedidos):
 @app.route('/')
 def index():
     pedidos = carregar_pedidos()
-    # Ordena para o mais recente ficar no topo
+    # Ordena pelo horário de atualização (mais recente no topo)
     pedidos_ordenados = sorted(pedidos, key=lambda x: x.get('ultima_atualizacao', ''), reverse=True)
     return render_template('index.html', pedidos=pedidos_ordenados)
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
     try:
-        # Pega os dados brutos para não perder nada
-        dados = request.get_json(silent=True) or request.form.to_dict()
+        # Pega o JSON enviado pelo Tiny
+        payload = request.get_json(silent=True) or request.form.to_dict()
         
-        if not dados:
-            print("!!! Recebi um post, mas veio sem dados.")
-            return jsonify({"status": "error", "msg": "Sem dados"}), 200
+        if not payload:
+            return jsonify({"status": "vazio"}), 200
 
-        # Tenta encontrar o NÚMERO do pedido em qualquer lugar (numero ou numero_pedido)
-        numero = str(dados.get('numero') or dados.get('numero_pedido') or '')
-        
-        # Tenta encontrar a SITUAÇÃO/STATUS
-        status_bruto = str(dados.get('situacao') or dados.get('status') or '').lower()
-        
-        # Tenta encontrar o NOME do cliente (pode vir como string ou dentro de um objeto)
-        cliente_raw = dados.get('cliente', 'Cliente não identificado')
-        if isinstance(cliente_raw, dict):
-            nome_cliente = cliente_raw.get('nome', 'Cliente s/ nome')
-        else:
-            nome_cliente = str(cliente_raw)
+        # O Tiny envia as informações dentro da chave 'dados'
+        # Se não houver a chave 'dados', usamos o payload principal como backup
+        info = payload.get('dados', payload)
 
-        # Se não achou número, não tem como salvar
-        if not numero or numero == "":
-            print(f"!!! Pedido ignorado: não achei o campo 'numero'. Dados: {dados}")
+        # Agora buscamos os campos dentro da variável 'info'
+        numero = str(info.get('numero', ''))
+        status_bruto = str(info.get('descricaoSituacao') or info.get('codigoSituacao') or '').lower()
+        
+        # Busca o nome do cliente
+        cliente_obj = info.get('cliente', {})
+        nome_cliente = cliente_obj.get('nome', 'Cliente não identificado') if isinstance(cliente_obj, dict) else str(cliente_obj)
+
+        if not numero:
+            print(f"!!! Falha ao localizar número no payload: {payload}")
             return jsonify({"status": "error", "msg": "numero nao encontrado"}), 200
 
         pedidos = carregar_pedidos()
 
-        # LISTA DE REMOÇÃO (Se o status for um destes, o pedido SOME da tela)
-        # Removi 'atendido' e 'concluido' temporariamente para teste
-        remover = ['cancelado', 'faturado', 'despachado', 'entregue']
+        # LISTA DE REMOÇÃO: Se o status for um destes, o pedido SAI da tela
+        remover = ['cancelado', 'faturado', 'despachado', 'entregue', 'atendido']
 
         if any(s in status_bruto for s in remover):
-            # Filtra a lista e tira o pedido com esse número
-            pedidos = [p for p in pedidos if str(p.get('numero') or p.get('numero_pedido')) != numero]
+            pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
             print(f"--- Pedido {numero} REMOVIDO (Status: {status_bruto})")
         else:
-            # Se NÃO for status de remover, ele entra ou atualiza na tela
+            # Se for status operacional, ADICIONA ou ATUALIZA
             agora = datetime.now().strftime('%H:%M')
             encontrado = False
             
             for p in pedidos:
-                if str(p.get('numero') or p.get('numero_pedido')) == numero:
-                    p.update(dados) # Atualiza com os dados novos do Tiny
+                if str(p.get('numero')) == numero:
+                    p['situacao'] = status_bruto.upper()
                     p['cliente_exibicao'] = nome_cliente
                     p['ultima_atualizacao'] = agora
-                    p['situacao_exibicao'] = status_bruto.upper()
                     encontrado = True
                     break
             
             if not encontrado:
-                # Se for pedido novo, cria o registro
                 novo_pedido = {
                     "numero": numero,
                     "cliente_exibicao": nome_cliente,
@@ -87,14 +80,13 @@ def webhook_tiny():
                     "ultima_atualizacao": agora
                 }
                 pedidos.append(novo_pedido)
-            
-            print(f"+++ Pedido {numero} NA TELA (Status: {status_bruto})")
+                print(f"+++ Pedido {numero} ADICIONADO (Status: {status_bruto})")
 
         salvar_pedidos(pedidos)
         return jsonify({"status": "success"}), 200
 
     except Exception as e:
-        print(f"ERRO CRÍTICO: {e}")
+        print(f"ERRO: {e}")
         return jsonify({"status": "error", "msg": str(e)}), 200
 
 if __name__ == '__main__':
