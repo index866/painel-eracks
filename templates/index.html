@@ -2,60 +2,41 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Eracks - Operacional</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <meta http-equiv="refresh" content="10">
+    <meta http-equiv="refresh" content="30">
     <style>
-        body { background-color: #f4f7f6; }
-        .navbar { background-color: #2c3e50; border-bottom: 5px solid #e74c3c; }
-        .card-pedido { border-radius: 10px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .badge-ecommerce { background-color: #ebedef; color: #555; font-size: 0.75rem; font-weight: bold; }
-        .status-badge { padding: 8px 15px; border-radius: 50px; font-weight: bold; text-transform: uppercase; }
-        .at-info { font-size: 0.7rem; color: #95a5a6; margin-top: 10px; text-align: right; font-style: italic; }
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; text-align: center; }
+        .header { background-color: #0044cc; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 8px solid #0044cc; text-align: left; }
+        .card h3 { margin: 0; color: #333; }
+        .card p { margin: 5px 0; color: #666; }
+        .status { font-weight: bold; color: #28a745; text-transform: uppercase; font-size: 0.9em; }
+        .empty { color: #999; margin-top: 50px; font-style: italic; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark p-3 mb-4">
-        <div class="container d-flex justify-content-between align-items-center">
-            <span class="navbar-brand h1 mb-0">📦 PAINEL ERACKS</span>
-            <span class="badge bg-light text-dark">Pendentes: {{ pedidos|length }}</span>
-        </div>
-    </nav>
 
-    <div class="container">
-        <div class="row">
-            {% for pedido in pedidos %}
-            <div class="col-md-4 mb-4">
-                <div class="card card-pedido">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge badge-ecommerce text-uppercase">{{ pedido.nomeEcommerce }}</span>
-                            <small class="text-muted">{{ pedido.data }}</small>
-                        </div>
-                        <h5 class="text-primary">Pedido #{{ pedido.numero }}</h5>
-                        <p class="mb-1 text-truncate"><strong>Cliente:</strong> {{ pedido.cliente }}</p>
-                        
-                        <div class="mt-3 d-flex flex-column align-items-center">
-                            <span class="badge status-badge w-100 
-                                {% if 'aprovado' in pedido.situacao|lower %}bg-success
-                                {% elif 'preparando' in pedido.situacao|lower %}bg-info text-dark
-                                {% else %}bg-warning text-dark{% endif %}">
-                                {{ pedido.situacao }}
-                            </span>
-                            <div class="at-info w-100">🕒 Atualizado às {{ pedido.atualizado_em }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="col-12 text-center mt-5">
-                <div class="p-5 border bg-white rounded shadow-sm">
-                    <h4 class="text-muted">Nenhum pedido pendente!</h4>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+    <div class="header">
+        <h1>📦 PAINEL ERACKS</h1>
+        <p>Pendentes na tela: <strong>{{ pedidos|length }}</strong></p>
     </div>
+
+    <div class="grid">
+        {% for pedido in pedidos %}
+        <div class="card">
+            <h3>Pedido #{{ pedido.numero or pedido.numero_pedido }}</h3>
+            <p><strong>Cliente:</strong> {{ pedido.cliente_exibicao or 'Verificar no Tiny' }}</p>
+            <p><strong>Status:</strong> <span class="status">{{ pedido.situacao or pedido.status }}</span></p>
+            <p><small>🕒 Atualizado às: {{ pedido.ultima_atualizacao }}</small></p>
+        </div>
+        {% else %}
+        <div class="empty">
+            <p>Nenhum pedido pendente. Aguardando sincronização com o Tiny ERP...</p>
+        </div>
+        {% endfor %}
+    </div>
+
 </body>
 </html>
-
