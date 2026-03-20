@@ -4,40 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Eracks - Operacional</title>
-    <meta http-equiv="refresh" content="30"> <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; text-align: center; }
-        
-        .header { background-color: #0044cc; color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        
-        .audio-control { background: #ff9800; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold; font-size: 14px; transition: 0.3s; }
-        .audio-control:hover { background: #e68a00; }
-
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 10px; }
-        
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 10px solid #0044cc; text-align: left; position: relative; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        
-        .card h3 { margin: 0 0 10px 0; color: #1a1a1a; font-size: 1.4em; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Estilo para o E-commerce / Venda Direta */
-        .ecommerce-tag { display: inline-block; background: #eef2ff; color: #4338ca; padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; border: 1px solid #c7d2fe; }
-        
-        .info-label { color: #888; font-size: 0.85em; margin-bottom: 2px; }
-        .info-value { color: #333; font-weight: 600; margin-bottom: 15px; }
-        
-        .status-badge { background: #dcfce7; color: #166534; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.85em; text-transform: uppercase; }
-        
-        .footer-card { margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; color: #999; font-size: 0.8em; }
-
-        .empty { color: #666; margin-top: 100px; font-size: 1.2em; }
+    <meta http-equiv="refresh" content="30">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .header { background: #0044cc; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .audio-btn { background: #ff9800; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
+        .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 8px solid #0044cc; position: relative; }
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ecommerce-tag { background: #eef2ff; color: #4338ca; padding: 3px 8px; border-radius: 15px; font-size: 0.7em; font-weight: bold; text-transform: uppercase; }
+        .valor-venda { color: #28a745; font-weight: 800; font-size: 1.1em; }
+        h3 { margin: 10px 0; font-size: 1.3em; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { background: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 5px; font-size: 0.7em; }
+        .info-label { color: #64748b; font-size: 0.8em; margin-top: 10px; }
+        .info-value { color: #1e293b; font-weight: 600; margin-bottom: 10px; }
+        .footer { border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 10px; display: flex; justify-content: space-between; font-size: 0.75em; color: #94a3b8; }
+        .empty { text-align: center; margin-top: 50px; color: #64748b; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>📦 PAINEL ERACKS - EXPEDIÇÃO</h1>
-        <p>Pedidos pendentes: <strong>{{ pedidos|length }}</strong></p>
-        <button class="audio-control" onclick="ativarAudio()">🔔 ATIVAR NOTIFICAÇÃO SONORA</button>
+        <h1>📦 EXPEDIÇÃO ERACKS</h1>
+        <p>Pedidos em tela: <strong>{{ pedidos|length }}</strong></p>
+        <button class="audio-btn" onclick="ativarAudio()">🔔 ATIVAR SOM</button>
     </div>
 
     <audio id="somNotificacao" src="https://actions.google.com/sounds/v1/foley/electronic_chime.ogg" preload="auto"></audio>
@@ -45,53 +35,42 @@
     <div class="grid">
         {% for pedido in pedidos %}
         <div class="card">
-            <span class="ecommerce-tag">{{ pedido.ecommerce or 'Venda Direta' }}</span>
+            <div class="card-top">
+                <span class="ecommerce-tag">{{ pedido.ecommerce }}</span>
+                <span class="valor-venda">{{ pedido.valor }}</span>
+            </div>
             
             <h3>
-                <span>Pedido #{{ pedido.numero }}</span>
-                <span class="status-badge">{{ pedido.situacao or 'PENDENTE' }}</span>
+                <span>#{{ pedido.numero }}</span>
+                <span class="status-badge">{{ pedido.situacao }}</span>
             </h3>
 
-            <div class="info-label">CLIENTE:</div>
+            <div class="info-label">CLIENTE</div>
             <div class="info-value">{{ pedido.cliente_exibicao }}</div>
 
-            <div class="footer-card">
-                <span>📍 Painel Eracks</span>
-                <span>🕒 Atualizado: <strong>{{ pedido.ultima_atualizacao }}</strong></span>
+            <div class="footer">
+                <span>Painel Operacional</span>
+                <span>🕒 {{ pedido.ultima_atualizacao }}</span>
             </div>
         </div>
         {% else %}
-        <div class="empty">
-            <p>😴 Tudo limpo! Aguardando novos pedidos do Tiny...</p>
-        </div>
+        <div class="empty"><h3>Aguardando novos pedidos...</h3></div>
         {% endfor %}
     </div>
 
     <script>
-        // Função para liberar o áudio no navegador (necessário clicar 1 vez ao abrir a página)
         function ativarAudio() {
             const som = document.getElementById('somNotificacao');
-            som.play().then(() => {
-                som.pause();
-                som.currentTime = 0;
-                alert("Som de notificação ativado! Avisaremos quando chegar pedido novo.");
-            }).catch(e => console.error("Erro ao ativar áudio:", e));
+            som.play().then(() => { som.pause(); som.currentTime = 0; alert("Som ativado!"); });
         }
 
-        // Lógica para tocar o som apenas quando o número de pedidos aumentar
         const totalAtual = {{ pedidos|length }};
-        const totalAnterior = localStorage.getItem('total_eracks') || 0;
+        const totalAnterior = localStorage.getItem('eracks_count') || 0;
 
         if (totalAtual > totalAnterior) {
-            const som = document.getElementById('somNotificacao');
-            som.play().catch(e => {
-                console.log("Áudio bloqueado! Clique no botão laranja para ativar o som.");
-            });
+            document.getElementById('somNotificacao').play();
         }
-
-        // Atualiza o histórico para a próxima verificação
-        localStorage.setItem('total_eracks', totalAtual);
+        localStorage.setItem('eracks_count', totalAtual);
     </script>
-
 </body>
 </html>
