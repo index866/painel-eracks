@@ -22,68 +22,81 @@ def salvar_pedidos(pedidos):
 @app.route('/')
 def index():
     pedidos = carregar_pedidos()
-    # Ordenar pelos mais recentes primeiro
+    # Ordena para o mais recente ficar no topo
     pedidos_ordenados = sorted(pedidos, key=lambda x: x.get('ultima_atualizacao', ''), reverse=True)
     return render_template('index.html', pedidos=pedidos_ordenados)
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
     try:
-        # Pega os dados independente de como o Tiny enviar (JSON ou Formulário)
-        if request.is_json:
-            dados = request.get_json()
-        else:
-            dados = request.form.to_dict()
-
+        # Pega os dados brutos para não perder nada
+        dados = request.get_json(silent=True) or request.form.to_dict()
+        
         if not dados:
-            return jsonify({"status": "vazio"}), 200
+            print("!!! Recebi um post, mas veio sem dados.")
+            return jsonify({"status": "error", "msg": "Sem dados"}), 200
 
-        # Extração de campos principais
+        # Tenta encontrar o NÚMERO do pedido em qualquer lugar (numero ou numero_pedido)
         numero = str(dados.get('numero') or dados.get('numero_pedido') or '')
+        
+        # Tenta encontrar a SITUAÇÃO/STATUS
         status_bruto = str(dados.get('situacao') or dados.get('status') or '').lower()
         
-        # Trata o nome do cliente
-        cliente_obj = dados.get('cliente', {})
-        nome_cliente = cliente_obj.get('nome') if isinstance(cliente_obj, dict) else str(cliente_obj)
-        if not nome_cliente or nome_cliente == '{}':
-            nome_cliente = "Cliente não identificado"
+        # Tenta encontrar o NOME do cliente (pode vir como string ou dentro de um objeto)
+        cliente_raw = dados.get('cliente', 'Cliente não identificado')
+        if isinstance(cliente_raw, dict):
+            nome_cliente = cliente_raw.get('nome', 'Cliente s/ nome')
+        else:
+            nome_cliente = str(cliente_raw)
 
-        if not numero:
-            return jsonify({"status": "sem_numero"}), 200
+        # Se não achou número, não tem como salvar
+        if not numero or numero == "":
+            print(f"!!! Pedido ignorado: não achei o campo 'numero'. Dados: {dados}")
+            return jsonify({"status": "error", "msg": "numero nao encontrado"}), 200
 
         pedidos = carregar_pedidos()
 
-        # Filtro de saída (Status que removem do painel)
-        remover = ['cancelado', 'faturado', 'atendido', 'concluido', 'despachado', 'entregue']
+        # LISTA DE REMOÇÃO (Se o status for um destes, o pedido SOME da tela)
+        # Removi 'atendido' e 'concluido' temporariamente para teste
+        remover = ['cancelado', 'faturado', 'despachado', 'entregue']
 
         if any(s in status_bruto for s in remover):
-            # Remove o pedido se ele foi faturado ou cancelado
+            # Filtra a lista e tira o pedido com esse número
             pedidos = [p for p in pedidos if str(p.get('numero') or p.get('numero_pedido')) != numero]
+            print(f"--- Pedido {numero} REMOVIDO (Status: {status_bruto})")
         else:
-            # Adiciona ou atualiza se for status operacional (Aberto, Preparando, etc)
+            # Se NÃO for status de remover, ele entra ou atualiza na tela
             agora = datetime.now().strftime('%H:%M')
             encontrado = False
+            
             for p in pedidos:
                 if str(p.get('numero') or p.get('numero_pedido')) == numero:
-                    p.update(dados)
+                    p.update(dados) # Atualiza com os dados novos do Tiny
                     p['cliente_exibicao'] = nome_cliente
                     p['ultima_atualizacao'] = agora
+                    p['situacao_exibicao'] = status_bruto.upper()
                     encontrado = True
                     break
             
             if not encontrado:
-                dados['cliente_exibicao'] = nome_cliente
-                dados['ultima_atualizacao'] = agora
-                pedidos.append(dados)
+                # Se for pedido novo, cria o registro
+                novo_pedido = {
+                    "numero": numero,
+                    "cliente_exibicao": nome_cliente,
+                    "situacao": status_bruto.upper(),
+                    "ultima_atualizacao": agora
+                }
+                pedidos.append(novo_pedido)
+            
+            print(f"+++ Pedido {numero} NA TELA (Status: {status_bruto})")
 
         salvar_pedidos(pedidos)
-        return jsonify({"status": "sucesso"}), 200
+        return jsonify({"status": "success"}), 200
 
     except Exception as e:
-        print(f"Erro no Webhook: {e}")
-        return jsonify({"status": "erro", "detalhe": str(e)}), 200
+        print(f"ERRO CRÍTICO: {e}")
+        return jsonify({"status": "error", "msg": str(e)}), 200
 
 if __name__ == '__main__':
-    # Configuração de porta para o Render
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
