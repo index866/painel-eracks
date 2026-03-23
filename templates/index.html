@@ -6,27 +6,60 @@
     <title>Painel de Pedidos - Live</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <style>
-        body { background-color: #121212; color: white; font-family: sans-serif; }
-        .column { min-height: 90vh; border-right: 1px solid #333; padding: 15px; }
-        .card-pedido { 
-            background-color: #1e1e1e; 
-            border: 1px solid #444; 
-            border-left: 5px solid #ffc107; 
-            margin-bottom: 15px; 
-            border-radius: 8px;
-            transition: transform 0.2s;
-        }
-        .card-pedido:hover { transform: scale(1.02); }
-        .status-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; }
-        .valor { color: #2ecc71; font-weight: bold; font-size: 1.1rem; }
-        .mkt-tag { color: #3498db; font-size: 0.85rem; font-weight: bold; }
-        .produtos { font-size: 0.85rem; color: #bbb; border-top: 1px solid #333; pt-2; margin-top: 10px; }
-        h2 { text-align: center; border-bottom: 2px solid #ffc107; padding-bottom: 10px; margin-bottom: 20px; }
+        body { background-color: #f4f7f6; color: #333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .column { min-height: 100vh; padding: 20px; border-right: 1px solid #e0e0e0; }
         
-        /* Cores por Empresa */
-        .col-eracks { border-top: 5px solid #e74c3c; }
-        .col-f2 { border-top: 5px solid #3498db; }
-        .col-agro { border-top: 5px solid #2ecc71; }
+        /* Títulos das Colunas */
+        h2 { 
+            text-align: center; 
+            font-weight: 800; 
+            padding-bottom: 15px; 
+            margin-bottom: 25px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .col-eracks h2 { color: #d32f2f; border-bottom: 4px solid #d32f2f; }
+        .col-f2 { background-color: #fdfdfd; }
+        .col-f2 h2 { color: #1976d2; border-bottom: 4px solid #1976d2; }
+        .col-agro h2 { color: #388e3c; border-bottom: 4px solid #388e3c; }
+
+        /* Estilo do Card */
+        .card-pedido { 
+            background-color: #ffffff; 
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px; 
+            border-radius: 12px;
+            border-left: 6px solid #ffa000;
+            transition: all 0.3s ease;
+        }
+        .card-pedido:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
+
+        /* Detalhes Internos */
+        .mkt-tag { 
+            background-color: #e3f2fd; 
+            color: #1976d2; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .cliente-nome { font-size: 1.05rem; font-weight: 600; color: #2c3e50; }
+        .status-badge { font-size: 0.7rem; font-weight: bold; }
+        .valor { color: #2e7d32; font-weight: 800; font-size: 1.2rem; }
+        
+        .produtos-box { 
+            font-size: 0.9rem; 
+            color: #555; 
+            background-color: #f9f9f9; 
+            padding: 10px; 
+            border-radius: 8px;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+        
+        small.time { color: #999; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -37,20 +70,20 @@
                 <h2>ERACKS</h2>
                 {% for pedido in eracks %}
                 <div class="card card-pedido p-3">
-                    <div class="d-flex justify-content-between">
-                        <span class="fw-bold">#{{ pedido.numero }}</span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="fw-bold text-secondary">#{{ pedido.numero }}</span>
                         <span class="mkt-tag">{{ pedido.ecommerce }}</span>
                     </div>
-                    <div class="my-2">
-                        <span class="fw-bold text-white">{{ pedido.cliente }}</span><br>
-                        <span class="status-badge bg-warning text-dark">{{ pedido.situacao }}</span>
+                    <div class="mt-2">
+                        <div class="cliente-nome">{{ pedido.cliente }}</div>
+                        <span class="badge rounded-pill bg-warning text-dark status-badge">{{ pedido.situacao }}</span>
                     </div>
-                    <div class="produtos">
+                    <div class="produtos-box">
                         {{ pedido.produtos | safe }}
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div class="d-flex justify-content-between align-items-center">
                         <span class="valor">{{ pedido.valor }}</span>
-                        <small class="text-secondary">{{ pedido.ultima_atualizacao }}</small>
+                        <small class="time">{{ pedido.ultima_atualizacao }}</small>
                     </div>
                 </div>
                 {% endfor %}
@@ -59,21 +92,21 @@
             <div class="col-md-4 column col-f2">
                 <h2>F2</h2>
                 {% for pedido in f2 %}
-                <div class="card card-pedido p-3" style="border-left-color: #3498db;">
-                    <div class="d-flex justify-content-between">
-                        <span class="fw-bold">#{{ pedido.numero }}</span>
+                <div class="card card-pedido p-3" style="border-left-color: #1976d2;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="fw-bold text-secondary">#{{ pedido.numero }}</span>
                         <span class="mkt-tag">{{ pedido.ecommerce }}</span>
                     </div>
-                    <div class="my-2">
-                        <span class="fw-bold text-white">{{ pedido.cliente }}</span><br>
-                        <span class="status-badge bg-primary text-white">{{ pedido.situacao }}</span>
+                    <div class="mt-2">
+                        <div class="cliente-nome">{{ pedido.cliente }}</div>
+                        <span class="badge rounded-pill bg-primary status-badge">{{ pedido.situacao }}</span>
                     </div>
-                    <div class="produtos">
+                    <div class="produtos-box">
                         {{ pedido.produtos | safe }}
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div class="d-flex justify-content-between align-items-center">
                         <span class="valor">{{ pedido.valor }}</span>
-                        <small class="text-secondary">{{ pedido.ultima_atualizacao }}</small>
+                        <small class="time">{{ pedido.ultima_atualizacao }}</small>
                     </div>
                 </div>
                 {% endfor %}
@@ -82,21 +115,21 @@
             <div class="col-md-4 column col-agro">
                 <h2>AGRO</h2>
                 {% for pedido in agrosensores %}
-                <div class="card card-pedido p-3" style="border-left-color: #2ecc71;">
-                    <div class="d-flex justify-content-between">
-                        <span class="fw-bold">#{{ pedido.numero }}</span>
+                <div class="card card-pedido p-3" style="border-left-color: #388e3c;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="fw-bold text-secondary">#{{ pedido.numero }}</span>
                         <span class="mkt-tag">{{ pedido.ecommerce }}</span>
                     </div>
-                    <div class="my-2">
-                        <span class="fw-bold text-white">{{ pedido.cliente }}</span><br>
-                        <span class="status-badge bg-success text-white">{{ pedido.situacao }}</span>
+                    <div class="mt-2">
+                        <div class="cliente-nome">{{ pedido.cliente }}</div>
+                        <span class="badge rounded-pill bg-success status-badge">{{ pedido.situacao }}</span>
                     </div>
-                    <div class="produtos">
+                    <div class="produtos-box">
                         {{ pedido.produtos | safe }}
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div class="d-flex justify-content-between align-items-center">
                         <span class="valor">{{ pedido.valor }}</span>
-                        <small class="text-secondary">{{ pedido.ultima_atualizacao }}</small>
+                        <small class="time">{{ pedido.ultima_atualizacao }}</small>
                     </div>
                 </div>
                 {% endfor %}
@@ -109,17 +142,17 @@
     </audio>
 
     <script>
-        // Atualiza a página a cada 30 segundos para checar novos pedidos
-        setTimeout(function(){
-            window.location.reload();
-        }, 30000);
+        // Atualiza a cada 30 segundos
+        setTimeout(function(){ window.location.reload(); }, 30000);
 
-        // Lógica simples para tocar som se a quantidade de pedidos aumentar
         const totalAtual = document.querySelectorAll('.card-pedido').length;
         const totalAntigo = localStorage.getItem('totalPedidos') || 0;
 
         if (totalAtual > totalAntigo) {
-            document.getElementById('alertaSonoro').play();
+            const playPromise = document.getElementById('alertaSonoro').play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => { console.log("Som bloqueado pelo navegador. Clique na página."); });
+            }
         }
         localStorage.setItem('totalPedidos', totalAtual);
     </script>
