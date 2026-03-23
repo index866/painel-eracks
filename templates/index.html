@@ -1,84 +1,31 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Logística Eracks</title>
-    <meta http-equiv="refresh" content="30">
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 10px; overflow: hidden; }
-        .header-main { background: #1e293b; color: white; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; }
-        
-        .container-colunas { display: flex; gap: 10px; height: 85vh; }
-        .coluna { flex: 1; background: #e2e8f0; border-radius: 10px; display: flex; flex-direction: column; padding: 10px; }
-        
-        .titulo-coluna { text-align: center; padding: 10px; border-radius: 5px; color: white; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
-        .bg-eracks { background: #0044cc; }
-        .bg-f2 { background: #059669; }
-        .bg-agro { background: #d97706; }
+<style>
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 10px; overflow: hidden; }
+    .header-main { background: #1e293b; color: white; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .container-colunas { display: flex; gap: 10px; height: 88vh; }
+    .coluna { flex: 1; background: #cbd5e1; border-radius: 10px; display: flex; flex-direction: column; padding: 10px; }
+    
+    .titulo-coluna { text-align: center; padding: 12px; border-radius: 8px; color: white; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; text-transform: uppercase; }
+    
+    /* CORES DAS COLUNAS */
+    .bg-eracks { background: #0044cc; } /* Azul */
+    .bg-f2 { background: #dc2626; }     /* Vermelho */
+    .bg-agro { background: #16a34a; }   /* Verde */
 
-        .lista-pedidos { overflow-y: auto; flex-grow: 1; }
-        .card { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card-top { display: flex; justify-content: space-between; font-size: 0.75em; font-weight: bold; color: #64748b; margin-bottom: 5px; }
-        .valor { color: #16a34a; font-size: 1.1em; }
-        h4 { margin: 5px 0; font-size: 1em; display: flex; justify-content: space-between; }
-        .cliente { font-size: 0.85em; color: #334155; font-weight: 600; }
-        .footer-card { font-size: 0.7em; color: #94a3b8; margin-top: 8px; display: flex; justify-content: space-between; }
-        .status { background: #f1f5f9; padding: 2px 5px; border-radius: 4px; font-size: 0.8em; }
-    </style>
-</head>
-<body>
+    .lista-pedidos { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
+    
+    .card { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border-left: 8px solid #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    
+    .card-top { display: flex; justify-content: space-between; font-size: 0.75em; font-weight: bold; color: #64748b; margin-bottom: 5px; }
+    .valor { color: #16a34a; font-size: 1.1em; font-weight: 800; }
+    h4 { margin: 8px 0; font-size: 1.2em; display: flex; justify-content: space-between; }
+    .cliente { font-size: 0.9em; color: #334155; font-weight: 600; text-transform: uppercase; }
+    
+    .footer-card { font-size: 0.75em; color: #94a3b8; margin-top: 10px; display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 5px; }
+    .status-badge { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; color: #475569; }
 
-    <div class="header-main">
-        <strong>EXPEDIÇÃO UNIFICADA</strong> | Total: {{ eracks|length + f2|length + agrosensores|length }}
-        <button onclick="ativarAudio()" style="margin-left:20px; cursor:pointer;">🔔 ATIVAR SOM</button>
-    </div>
-
-    <audio id="som" src="https://actions.google.com/sounds/v1/foley/electronic_chime.ogg"></audio>
-
-    <div class="container-colunas">
-        <div class="coluna">
-            <div class="titulo-coluna bg-eracks">ERACKS ({{ eracks|length }})</div>
-            <div class="lista-pedidos">
-                {% for p in eracks %}<div class="card" style="border-left-color: #0044cc;">
-                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
-                    <h4><span>#{{ p.numero }}</span> <span class="status">{{ p.situacao }}</span></h4>
-                    <div class="cliente">{{ p.cliente }}</div>
-                    <div class="footer-card"><span>🕒 {{ p.ultima_atualizacao }}</span></div>
-                </div>{% endfor %}
-            </div>
-        </div>
-
-        <div class="coluna">
-            <div class="titulo-coluna bg-f2">F2 ({{ f2|length }})</div>
-            <div class="lista-pedidos">
-                {% for p in f2 %}<div class="card" style="border-left-color: #059669;">
-                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
-                    <h4><span>#{{ p.numero }}</span> <span class="status">{{ p.situacao }}</span></h4>
-                    <div class="cliente">{{ p.cliente }}</div>
-                    <div class="footer-card"><span>🕒 {{ p.ultima_atualizacao }}</span></div>
-                </div>{% endfor %}
-            </div>
-        </div>
-
-        <div class="coluna">
-            <div class="titulo-coluna bg-agro">AGROSENSORES ({{ agro|length }})</div>
-            <div class="lista-pedidos">
-                {% for p in agrosensores %}<div class="card" style="border-left-color: #d97706;">
-                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
-                    <h4><span>#{{ p.numero }}</span> <span class="status">{{ p.situacao }}</span></h4>
-                    <div class="cliente">{{ p.cliente }}</div>
-                    <div class="footer-card"><span>🕒 {{ p.ultima_atualizacao }}</span></div>
-                </div>{% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function ativarAudio() { document.getElementById('som').play(); alert("Som ativado!"); }
-        const totalAtual = {{ eracks|length + f2|length + agrosensores|length }};
-        if (totalAtual > (localStorage.getItem('total_p') || 0)) { document.getElementById('som').play(); }
-        localStorage.setItem('total_p', totalAtual);
-    </script>
-</body>
-</html>
+    /* AJUSTE DAS BORDAS DOS CARDS POR COLUNA */
+    .coluna:nth-child(1) .card { border-left-color: #0044cc; } /* Borda Azul na Eracks */
+    .coluna:nth-child(2) .card { border-left-color: #dc2626; } /* Borda Vermelha na F2 */
+    .coluna:nth-child(3) .card { border-left-color: #16a34a; } /* Borda Verde na Agro */
+</style>
