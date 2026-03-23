@@ -6,6 +6,7 @@ import requests
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime, timedelta
 
+# Configuração de Log para o Render
 logging.basicConfig(stream=sys.stderr, level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ CONFIG_EMPRESAS = {
 }
 
 def buscar_estoque(sku, token):
-    """ Consulta o saldo atual do produto no Tiny """
+    """ Consulta o saldo atual do produto no Tiny via API """
     url = "https://api.tiny.com.br/api2/produto.obter.estoque.php"
     params = {'token': token, 'codigo': sku, 'formato': 'json'}
     try:
@@ -41,11 +42,12 @@ def buscar_estoque(sku, token):
         dados = res.json()
         saldo = dados.get('retorno', {}).get('produto', {}).get('saldo', 0)
         return float(saldo)
-    except:
+    except Exception as e:
+        logger.error(f"Erro ao buscar estoque SKU {sku}: {e}")
         return 0
 
 def buscar_detalhes_tiny(id_pedido, token):
-    """ Consulta Detalhes, Marketplace e Estoque de cada item """
+    """ Consulta Detalhes, Marketplace e Estoque de cada item via API v2 """
     url = "https://api.tiny.com.br/api2/pedido.obter.php"
     params = {'token': token, 'id': id_pedido, 'formato': 'json'}
     try:
@@ -55,9 +57,25 @@ def buscar_detalhes_tiny(id_pedido, token):
         if retorno.get('status') == 'OK':
             p = retorno.get('pedido', {})
             
-            # Tenta encontrar o marketplace em vários campos possíveis
-            mkt = p.get('nome_ecommerce') or p.get('nome_omnichannel') or p.get('id_venda_original') or "Venda Direta"
-            if not mkt or mkt == "": mkt = "Venda Direta"
+            # --- LÓGICA REFORÇADA PARA MARKETPLACE ---
+            # Tenta encontrar o canal em campos que a v1 do webhook ignora
+            mkt = (
+                p.get('nome_ecommerce') or 
+                p.get('nome_omnichannel') or 
+                p.get('intermediador', {}).get('nome') or 
+                p.get('canal_venda') or
+                ""
+            )
+
+            # Identificação por padrão de ID (Caso os campos acima falhem)
+            if not mkt or mkt == "":
+                venda_orig = str(p.get('id_venda_original', ''))
+                if "MLB" in venda_orig:
+                    mkt = "Mercado Livre"
+                elif "shopee" in venda_orig.lower():
+                    mkt = "Shopee"
+                else:
+                    mkt = "Venda Direta"
 
             itens = p.get('itens', [])
             lista_prod = []
@@ -67,19 +85,24 @@ def buscar_detalhes_tiny(id_pedido, token):
                 desc = item.get('descricao', 'Produto')
                 qtd_pedida = int(float(item.get('quantidade', 1)))
                 
-                # BUSCA ESTOQUE REAL NO MOMENTO
+                # BUSCA ESTOQUE REAL NO TINY
                 saldo_atual = buscar_estoque(sku, token)
-                status_estoque = f"✅ Disp: {int(saldo_atual)}" if saldo_atual >= qtd_pedida else f"❌ Falta (Estoque: {int(saldo_atual)})"
                 
-                lista_prod.append(f"{qtd_pedida}x [{sku}] {desc} | {status_estoque}")
+                # Define cor visual (Verde para OK, Vermelho para Falta)
+                if saldo_atual >= qtd_pedida:
+                    status_estoque = f'<span style="color: #2e7d32; font-weight: bold;">✅ Disponível: {int(saldo_atual)}</span>'
+                else:
+                    status_estoque = f'<span style="color: #d32f2f; font-weight: bold;">❌ FALTA (Estoque: {int(saldo_atual)})</span>'
+                
+                lista_prod.append(f"<b>{qtd_pedida}x</b> [{sku}] {desc}<br>{status_estoque}")
             
             return {
                 "valor": p.get('total_pedido', 0),
-                "mkt": mkt,
-                "produtos": " <br> ".join(lista_prod) # Usando <br> para quebrar linha no card
+                "mkt": mkt.upper(),
+                "produtos": "<br><br>".join(lista_prod)
             }
     except Exception as e:
-        logger.error(f"Erro na consulta API Tiny: {e}")
+        logger.error(f"Erro na consulta API Tiny Detalhes: {e}")
     return None
 
 def carregar_dados(arquivo):
@@ -101,13 +124,22 @@ def index():
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
+    # Suporte para ping de teste do Tiny
+    if not request.data: return jsonify({"status": "ok"}), 200
+
     payload = request.get_json(silent=True) or request.form.to_dict()
-    if not payload or payload.get('tipo') == 'estoque': return jsonify({"status": "ignorado"}), 200
+    
+    # Ignora webhooks de alteração de estoque para não poluir o painel de vendas
+    if payload.get('tipo') == 'estoque':
+        return jsonify({"status": "estoque_ignorado"}), 200
 
     try:
         cnpj = str(payload.get('cnpj', '')).replace('.', '').replace('/', '').replace('-', '').strip()
         config = CONFIG_EMPRESAS.get(cnpj)
-        if not config: return jsonify({"status": "cnpj_desconhecido"}), 200
+
+        if not config:
+            logger.warning(f"CNPJ {cnpj} não configurado.")
+            return jsonify({"status": "cnpj_desconhecido"}), 200
 
         dados_webhook = payload.get('dados', {})
         id_pedido = dados_webhook.get('id')
@@ -117,34 +149,41 @@ def webhook_tiny():
         arquivo_destino = config['arquivo']
         pedidos = carregar_dados(arquivo_destino)
         
+        # Status que devem aparecer no painel (ajuste conforme seu fluxo no Tiny)
         situacoes_vivas = ["aberto", "aprovado", "preparando", "pronto", "separacao"]
         
         if any(x in status for x in situacoes_vivas):
+            # Chama a função de investigação (Marketplace + Itens + Estoque)
             detalhes = buscar_detalhes_tiny(id_pedido, config['token'])
             
             fuso = datetime.now() - timedelta(hours=3)
             valor_raw = detalhes['valor'] if detalhes else 0
             valor_f = f"R$ {float(valor_raw):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
 
+            # Remove duplicata antes de adicionar a versão atualizada
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
             pedidos.append({
                 "numero": numero,
                 "cliente": dados_webhook.get('cliente', {}).get('nome', 'Cliente'),
-                "ecommerce": detalhes['mkt'] if detalhes else "Venda Direta",
+                "ecommerce": detalhes['mkt'] if detalhes else "VENDA DIRETA",
                 "situacao": status.upper(),
                 "ultima_atualizacao": fuso.strftime('%H:%M'),
                 "chegada": fuso.isoformat(),
                 "valor": valor_f,
-                "produtos": detalhes['produtos'] if detalhes else "Consultando itens..."
+                "produtos": detalhes['produtos'] if detalhes else "Carregando informações..."
             })
+            logger.info(f"Pedido {numero} da {config['slug']} atualizado com sucesso.")
         else:
+            # Se o pedido foi cancelado ou faturado, removemos da visualização ativa
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
 
         salvar_dados(pedidos, arquivo_destino)
         return jsonify({"status": "success"}), 200
     except Exception as e:
-        logger.error(f"Erro: {str(e)}")
+        logger.error(f"Erro geral no webhook: {str(e)}")
         return jsonify({"status": "error"}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+    # Porta padrão do Render
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
