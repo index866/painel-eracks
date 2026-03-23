@@ -3,195 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expedição Unificada - Tema Claro</title>
-    <meta http-equiv="refresh" content="60">
+    <title>Painel de Pedidos - Live</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <style>
-        :root {
-            --bg-body: #f1f5f9;
-            --bg-col: #e2e8f0;
-            --card-white: #ffffff;
-            --text-dark: #1e293b;
-            --color-eracks: #2563eb;
-            --color-f2: #dc2626;
-            --color-agro: #16a34a;
+        body { background-color: #121212; color: white; font-family: sans-serif; }
+        .column { min-height: 90vh; border-right: 1px solid #333; padding: 15px; }
+        .card-pedido { 
+            background-color: #1e1e1e; 
+            border: 1px solid #444; 
+            border-left: 5px solid #ffc107; 
+            margin-bottom: 15px; 
+            border-radius: 8px;
+            transition: transform 0.2s;
         }
-
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-dark); margin: 0; padding: 10px; overflow: hidden; }
+        .card-pedido:hover { transform: scale(1.02); }
+        .status-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; }
+        .valor { color: #2ecc71; font-weight: bold; font-size: 1.1rem; }
+        .mkt-tag { color: #3498db; font-size: 0.85rem; font-weight: bold; }
+        .produtos { font-size: 0.85rem; color: #bbb; border-top: 1px solid #333; pt-2; margin-top: 10px; }
+        h2 { text-align: center; border-bottom: 2px solid #ffc107; padding-bottom: 10px; margin-bottom: 20px; }
         
-        .header-main { 
-            background: #ffffff; padding: 10px 20px; text-align: center; 
-            border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; 
-            align-items: center; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .container-colunas { display: flex; gap: 12px; height: 88vh; }
-        
-        .coluna { 
-            flex: 1; background: var(--bg-col); border-radius: 12px; 
-            display: flex; flex-direction: column; padding: 10px; 
-            border: 1px solid #cbd5e1; min-width: 0;
-        }
-
-        .titulo-coluna { 
-            text-align: center; padding: 12px; border-radius: 8px; color: white; 
-            font-weight: 800; margin-bottom: 15px; text-transform: uppercase;
-        }
-
-        .bg-eracks { background: var(--color-eracks); }
-        .bg-f2 { background: var(--color-f2); }
-        .bg-agro { background: var(--color-agro); }
-
-        .lista-pedidos { overflow-y: auto; flex-grow: 1; }
-
-        /* Card Visual Tema Claro */
-        .card { 
-            background: var(--card-white); color: var(--text-dark); border-radius: 12px; 
-            margin-bottom: 15px; padding: 15px; position: relative;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 10px solid #475569;
-        }
-
-        .status-aberto { border-left-color: #f59e0b !important; background: #fffdf5; }
-
-        .num-pedido { font-size: 2em; font-weight: 900; color: #0f172a; display: block; }
-        
-        .cliente { font-size: 0.95em; font-weight: 700; color: #475569; text-transform: uppercase; display: block; margin: 5px 0; }
-
-        /* Tags Marketplace */
-        .mkt-tag { font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
-        .tag-ml { background: #ffe600; color: #000; border: 1px solid #e6cf00; }
-        .tag-amazon { background: #232f3e; color: #fff; }
-        .tag-shopee { background: #ee4d2d; color: #fff; }
-        .tag-venda-direta { background: #cbd5e1; color: #475569; }
-
-        .lista-produtos { 
-            background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px;
-            font-size: 0.9em; font-weight: 600; color: #1e293b; border: 1px solid #e2e8f0;
-            line-height: 1.4;
-        }
-
-        .valor-total { font-size: 1.2em; font-weight: 800; color: #16a34a; margin-top: 8px; display: block; }
-
-        .tempo-cronometro { 
-            position: absolute; top: 15px; right: 15px; 
-            background: #fee2e2; color: #ef4444; 
-            padding: 2px 8px; border-radius: 5px; font-size: 0.8em; font-weight: 800;
-        }
-
-        /* Borda por Coluna */
-        .col-eracks .card { border-left-color: var(--color-eracks); }
-        .col-f2 .card { border-left-color: var(--color-f2); }
-        .col-agro .card { border-left-color: var(--color-agro); }
+        /* Cores por Empresa */
+        .col-eracks { border-top: 5px solid #e74c3c; }
+        .col-f2 { border-top: 5px solid #3498db; }
+        .col-agro { border-top: 5px solid #2ecc71; }
     </style>
 </head>
 <body>
 
-    <div class="header-main">
-        <div style="font-size: 1.2em; font-weight: 800; color: #1e293b;">📋 EXPEDIÇÃO </div>
-        <button onclick="ativarAudio()" style="background:#f59e0b; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🔔 ATIVAR SOM</button>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4 column col-eracks">
+                <h2>ERACKS</h2>
+                {% for pedido in eracks %}
+                <div class="card card-pedido p-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">#{{ pedido.numero }}</span>
+                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                    </div>
+                    <div class="my-2">
+                        <span class="fw-bold text-white">{{ pedido.cliente }}</span><br>
+                        <span class="status-badge bg-warning text-dark">{{ pedido.situacao }}</span>
+                    </div>
+                    <div class="produtos">
+                        {{ pedido.produtos | safe }}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="valor">{{ pedido.valor }}</span>
+                        <small class="text-secondary">{{ pedido.ultima_atualizacao }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-4 column col-f2">
+                <h2>F2</h2>
+                {% for pedido in f2 %}
+                <div class="card card-pedido p-3" style="border-left-color: #3498db;">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">#{{ pedido.numero }}</span>
+                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                    </div>
+                    <div class="my-2">
+                        <span class="fw-bold text-white">{{ pedido.cliente }}</span><br>
+                        <span class="status-badge bg-primary text-white">{{ pedido.situacao }}</span>
+                    </div>
+                    <div class="produtos">
+                        {{ pedido.produtos | safe }}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="valor">{{ pedido.valor }}</span>
+                        <small class="text-secondary">{{ pedido.ultima_atualizacao }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-4 column col-agro">
+                <h2>AGRO</h2>
+                {% for pedido in agrosensores %}
+                <div class="card card-pedido p-3" style="border-left-color: #2ecc71;">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">#{{ pedido.numero }}</span>
+                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                    </div>
+                    <div class="my-2">
+                        <span class="fw-bold text-white">{{ pedido.cliente }}</span><br>
+                        <span class="status-badge bg-success text-white">{{ pedido.situacao }}</span>
+                    </div>
+                    <div class="produtos">
+                        {{ pedido.produtos | safe }}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="valor">{{ pedido.valor }}</span>
+                        <small class="text-secondary">{{ pedido.ultima_atualizacao }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 
-    <audio id="somAlerta" src="https://actions.google.com/sounds/v1/foley/electronic_chime.ogg"></audio>
-
-    <div class="container-colunas">
-        
-        <div class="coluna col-eracks">
-            <div class="titulo-coluna bg-eracks">ERACKS ({{ eracks|length }})</div>
-            <div class="lista-pedidos">
-                {% for p in eracks %}
-                <div class="card {% if 'ABERTO' in p.situacao %}status-aberto{% endif %}">
-                    <div class="tempo-cronometro" data-chegada="{{ p.chegada }}">0 min</div>
-                    <span class="num-pedido">#{{ p.numero }}</span>
-                    <span class="cliente">{{ p.cliente }}</span>
-                    
-                    <span class="mkt-tag 
-                        {% if 'Mercado' in p.ecommerce %}tag-ml
-                        {% elif 'Amazon' in p.ecommerce %}tag-amazon
-                        {% elif 'Tray' in p.ecommerce or 'Shopee' in p.ecommerce %}tag-shopee
-                        {% else %}tag-venda-direta{% endif %}">
-                        {{ p.ecommerce }}
-                    </span>
-
-                    <div class="lista-produtos">📦 {{ p.produtos if p.produtos else 'Itens não carregados - Verifique o Tiny' }}</div>
-                    <span class="valor-total">{{ p.valor }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="coluna col-f2">
-            <div class="titulo-coluna bg-f2">F2 DESIGN ({{ f2|length }})</div>
-            <div class="lista-pedidos">
-                {% for p in f2 %}
-                <div class="card {% if 'ABERTO' in p.situacao %}status-aberto{% endif %}">
-                    <div class="tempo-cronometro" data-chegada="{{ p.chegada }}">0 min</div>
-                    <span class="num-pedido">#{{ p.numero }}</span>
-                    <span class="cliente">{{ p.cliente }}</span>
-                    
-                    <span class="mkt-tag 
-                        {% if 'Mercado' in p.ecommerce %}tag-ml
-                        {% elif 'Amazon' in p.ecommerce %}tag-amazon
-                        {% elif 'Tray' in p.ecommerce or 'Shopee' in p.ecommerce %}tag-shopee
-                        {% else %}tag-venda-direta{% endif %}">
-                        {{ p.ecommerce }}
-                    </span>
-
-                    <div class="lista-produtos">📦 {{ p.produtos if p.produtos else 'Itens não carregados' }}</div>
-                    <span class="valor-total">{{ p.valor }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="coluna col-agro">
-            <div class="titulo-coluna bg-agro">AGROSENSORES ({{ agrosensores|length }})</div>
-            <div class="lista-pedidos">
-                {% for p in agrosensores %}
-                <div class="card {% if 'ABERTO' in p.situacao %}status-aberto{% endif %}">
-                    <div class="tempo-cronometro" data-chegada="{{ p.chegada }}">0 min</div>
-                    <span class="num-pedido">#{{ p.numero }}</span>
-                    <span class="cliente">{{ p.cliente }}</span>
-                    
-                    <span class="mkt-tag 
-                        {% if 'Mercado' in p.ecommerce %}tag-ml
-                        {% elif 'Amazon' in p.ecommerce %}tag-amazon
-                        {% elif 'Tray' in p.ecommerce or 'Shopee' in p.ecommerce %}tag-shopee
-                        {% else %}tag-venda-direta{% endif %}">
-                        {{ p.ecommerce }}
-                    </span>
-
-                    <div class="lista-produtos">📦 {{ p.produtos if p.produtos else 'Itens não carregados' }}</div>
-                    <span class="valor-total">{{ p.valor }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-    </div>
+    <audio id="alertaSonoro">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
-        function ativarAudio() {
-            const som = document.getElementById('somAlerta');
-            som.play().then(() => { som.pause(); som.currentTime = 0; alert("Som Ativado!"); });
-        }
+        // Atualiza a página a cada 30 segundos para checar novos pedidos
+        setTimeout(function(){
+            window.location.reload();
+        }, 30000);
 
-        function atualizarCronometros() {
-            const agora = new Date();
-            document.querySelectorAll('.tempo-cronometro').forEach(el => {
-                const chegada = new Date(el.getAttribute('data-chegada'));
-                const diffMin = Math.floor((agora - chegada) / 60000);
-                el.innerText = diffMin + " min";
-                if(diffMin >= 30) { el.style.background = "#ef4444"; el.style.color = "white"; }
-            });
-        }
-        setInterval(atualizarCronometros, 10000);
-        atualizarCronometros();
+        // Lógica simples para tocar som se a quantidade de pedidos aumentar
+        const totalAtual = document.querySelectorAll('.card-pedido').length;
+        const totalAntigo = localStorage.getItem('totalPedidos') || 0;
 
-        const totalAtual = {{ eracks|length + f2|length + agrosensores|length }};
-        const totalAnterior = localStorage.getItem('last_total') || 0;
-        if (totalAtual > totalAnterior) {
-            document.getElementById('somAlerta').play().catch(e => console.log("Som bloqueado"));
+        if (totalAtual > totalAntigo) {
+            document.getElementById('alertaSonoro').play();
         }
-        localStorage.setItem('last_total', totalAtual);
+        localStorage.setItem('totalPedidos', totalAtual);
     </script>
 </body>
 </html>
