@@ -3,106 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Expedição Unificada</title>
-    <meta http-equiv="refresh" content="30">
+    <title>Painel Expedição Pro</title>
+    <meta http-equiv="refresh" content="60">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 10px; overflow: hidden; }
-        .header-main { background: #1e293b; color: white; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        :root {
+            --bg-body: #0f172a;
+            --bg-col: #1e293b;
+            --text-main: #f8fafc;
+            --color-eracks: #2563eb;
+            --color-f2: #dc2626;
+            --color-agro: #16a34a;
+        }
+
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; overflow: hidden; }
         
-        .container-colunas { display: flex; gap: 10px; height: 88vh; }
-        .coluna { flex: 1; background: #cbd5e1; border-radius: 10px; display: flex; flex-direction: column; padding: 10px; min-width: 0; }
+        .header-main { 
+            background: rgba(30, 41, 59, 0.8); padding: 10px 20px; text-align: center; 
+            border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; 
+            align-items: center; border: 1px solid #334155;
+        }
+
+        .container-colunas { display: flex; gap: 12px; height: 88vh; }
         
-        .titulo-coluna { text-align: center; padding: 12px; border-radius: 8px; color: white; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; text-transform: uppercase; }
-        
-        /* CORES DAS COLUNAS */
-        .bg-eracks { background: #0044cc; } /* Azul */
-        .bg-f2 { background: #dc2626; }     /* Vermelho */
-        .bg-agro { background: #16a34a; }   /* Verde */
+        .coluna { 
+            flex: 1; background: var(--bg-col); border-radius: 12px; 
+            display: flex; flex-direction: column; padding: 10px; 
+            border: 1px solid #334155; min-width: 0;
+        }
+
+        .titulo-coluna { 
+            text-align: center; padding: 12px; border-radius: 8px; color: white; 
+            font-weight: 800; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .bg-eracks { background: var(--color-eracks); box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); }
+        .bg-f2 { background: var(--color-f2); box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4); }
+        .bg-agro { background: var(--color-agro); box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4); }
 
         .lista-pedidos { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
-        
-        .card { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border-left: 8px solid #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        
-        .card-top { display: flex; justify-content: space-between; font-size: 0.75em; font-weight: bold; color: #64748b; margin-bottom: 5px; }
-        .valor { color: #16a34a; font-size: 1.1em; font-weight: 800; }
-        h4 { margin: 8px 0; font-size: 1.2em; display: flex; justify-content: space-between; align-items: center; }
-        .cliente { font-size: 0.9em; color: #334155; font-weight: 600; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        
-        .footer-card { font-size: 0.75em; color: #94a3b8; margin-top: 10px; display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 5px; }
-        .status-badge { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; color: #475569; }
 
-        /* AJUSTE DAS BORDAS DOS CARDS POR COLUNA */
-        .coluna-eracks .card { border-left-color: #0044cc; }
-        .coluna-f2 .card { border-left-color: #dc2626; }
-        .coluna-agro .card { border-left-color: #16a34a; }
+        /* Estilo do Card */
+        .card { 
+            background: #ffffff; color: #1e293b; border-radius: 12px; 
+            margin-bottom: 15px; padding: 15px; position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); border-left: 10px solid #475569;
+        }
+
+        .status-aberto { background: #fffbeb; border-left-color: #f59e0b; }
+
+        .num-pedido { font-size: 1.8em; font-weight: 900; line-height: 1; color: #0f172a; }
+        
+        .cliente { font-size: 0.9em; font-weight: 700; color: #475569; display: block; margin: 5px 0; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Tags Marketplace */
+        .mkt-tag { font-size: 0.7em; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
+        .tag-ml { background: #ffe600; color: #000; }
+        .tag-amazon { background: #232f3e; color: #fff; }
+        .tag-shopee { background: #ee4d2d; color: #fff; }
+        .tag-venda-direta { background: #e2e8f0; color: #475569; }
+
+        .lista-produtos { 
+            background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px;
+            font-size: 0.85em; font-weight: 600; color: #1e293b; border: 1px dashed #cbd5e1;
+            line-height: 1.4;
+        }
+
+        .valor-total { font-size: 1.1em; font-weight: 800; color: #16a34a; margin-top: 8px; display: block; }
+
+        .tempo-cronometro { 
+            position: absolute; top: 15px; right: 15px; 
+            background: #fee2e2; color: #ef4444; 
+            padding: 2px 8px; border-radius: 5px; font-size: 0.75em; font-weight: 800;
+        }
+
+        /* Cores de Borda por Coluna */
+        .col-eracks .card { border-left-color: var(--color-eracks); }
+        .col-f2 .card { border-left-color: var(--color-f2); }
+        .col-agro .card { border-left-color: var(--color-agro); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header-main">
-        <span>📦 EXPEDIÇÃO UNIFICADA</span>
-        <button onclick="ativarSom()" style="background: #ff9800; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">🔔 ATIVAR SOM</button>
+        <div style="font-size: 1.2em; font-weight: 800;">🚀 PAINEL DE EXPEDIÇÃO UNIFICADO</div>
+        <div>
+            <button onclick="ativarAudio()" style="background:#f59e0b; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🔔 ATIVAR SOM</button>
+        </div>
     </div>
 
-    <audio id="somNotificacao" src="https://actions.google.com/sounds/v1/foley/electronic_chime.ogg" preload="auto"></audio>
+    <audio id="somAlerta" src="https://actions.google.com/sounds/v1/foley/electronic_chime.ogg" preload="auto"></audio>
 
     <div class="container-colunas">
-        <div class="coluna coluna-eracks">
+        
+        <div class="coluna col-eracks">
             <div class="titulo-coluna bg-eracks">ERACKS ({{ eracks|length }})</div>
             <div class="lista-pedidos">
                 {% for p in eracks %}
-                <div class="card">
-                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
-                    <h4><span>#{{ p.numero }}</span> <span class="status-badge">{{ p.situacao }}</span></h4>
-                    <div class="cliente">{{ p.cliente }}</div>
-                    <div class="footer-card">🕒 {{ p.ultima_atualizacao }}</div>
+                <div class="card {% if 'ABERTO' in p.situacao %}status-aberto{% endif %}">
+                    <div class="tempo-cronometro" data-chegada="{{ p.chegada }}">0 min</div>
+                    <span class="num-pedido">#{{ p.numero }}</span>
+                    <span class="cliente">{{ p.cliente }}</span>
+                    
+                    <span class="mkt-tag 
+                        {% if 'Mercado' in p.ecommerce %}tag-ml
+                        {% elif 'Amazon' in p.ecommerce %}tag-amazon
+                        {% elif 'Tray' in p.ecommerce or 'Shopee' in p.ecommerce %}tag-shopee
+                        {% else %}tag-venda-direta{% endif %}">
+                        {{ p.ecommerce }}
+                    </span>
+
+                    <div class="lista-produtos">📦 {{ p.produtos if p.produtos else 'Itens não carregados' }}</div>
+                    <span class="valor-total">{{ p.valor }}</span>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="coluna coluna-f2">
+        <div class="coluna col-f2">
             <div class="titulo-coluna bg-f2">F2 DESIGN ({{ f2|length }})</div>
             <div class="lista-pedidos">
                 {% for p in f2 %}
-                <div class="card">
-                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
-                    <h4><span>#{{ p.numero }}</span> <span class="status-badge">{{ p.situacao }}</span></h4>
-                    <div class="cliente">{{ p.cliente }}</div>
-                    <div class="footer-card">🕒 {{ p.ultima_atualizacao }}</div>
+                <div class="card {% if 'ABERTO' in p.situacao %}status-aberto{% endif %}">
+                    <div class="tempo-cronometro" data-chegada="{{ p.chegada }}">0 min</div>
+                    <span class="num-pedido">#{{ p.numero }}</span>
+                    <span class="cliente">{{ p.cliente }}</span>
+                    
+                    <span class="mkt-tag 
+                        {% if 'Mercado' in p.ecommerce %}tag-ml
+                        {% elif 'Amazon' in p.ecommerce %}tag-amazon
+                        {% elif 'Tray' in p.ecommerce or 'Shopee' in p.ecommerce %}tag-shopee
+                        {% else %}tag-venda-direta{% endif %}">
+                        {{ p.ecommerce }}
+                    </span>
+
+                    <div class="lista-produtos">📦 {{ p.produtos if p.produtos else 'Itens não carregados' }}</div>
+                    <span class="valor-total">{{ p.valor }}</span>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="coluna coluna-agro">
+        <div class="coluna col-agro">
             <div class="titulo-coluna bg-agro">AGROSENSORES ({{ agrosensores|length }})</div>
             <div class="lista-pedidos">
                 {% for p in agrosensores %}
-                <div class="card">
-                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
-                    <h4><span>#{{ p.numero }}</span> <span class="status-badge">{{ p.situacao }}</span></h4>
-                    <div class="cliente">{{ p.cliente }}</div>
-                    <div class="footer-card">🕒 {{ p.ultima_atualizacao }}</div>
+                <div class="card {% if 'ABERTO' in p.situacao %}status-aberto{% endif %}">
+                    <div class="tempo-cronometro" data-chegada="{{ p.chegada }}">0 min</div>
+                    <span class="num-pedido">#{{ p.numero }}</span>
+                    <span class="cliente">{{ p.cliente }}</span>
+                    
+                    <span class="mkt-tag 
+                        {% if 'Mercado' in p.ecommerce %}tag-ml
+                        {% elif 'Amazon' in p.ecommerce %}tag-amazon
+                        {% elif 'Tray' in p.ecommerce or 'Shopee' in p.ecommerce %}tag-shopee
+                        {% else %}tag-venda-direta{% endif %}">
+                        {{ p.ecommerce }}
+                    </span>
+
+                    <div class="lista-produtos">📦 {{ p.produtos if p.produtos else 'Itens não carregados' }}</div>
+                    <span class="valor-total">{{ p.valor }}</span>
                 </div>
                 {% endfor %}
             </div>
         </div>
+
     </div>
 
     <script>
-        function ativarSom() {
-            const som = document.getElementById('somNotificacao');
-            som.play().then(() => { som.pause(); som.currentTime = 0; alert("Som ativado!"); });
+        function ativarAudio() {
+            const som = document.getElementById('somAlerta');
+            som.play().then(() => { som.pause(); som.currentTime = 0; alert("Som Ativado!"); });
         }
 
+        // Lógica do Cronómetro
+        function atualizarCronometros() {
+            const agora = new Date();
+            document.querySelectorAll('.tempo-cronometro').forEach(el => {
+                const chegada = new Date(el.getAttribute('data-chegada'));
+                const diffMs = agora - chegada;
+                const diffMin = Math.floor(diffMs / 60000);
+                el.innerText = diffMin + " min";
+                
+                // Se passar de 30 min, fica com fundo vermelho forte
+                if(diffMin >= 30) { el.style.background = "#ef4444"; el.style.color = "white"; }
+            });
+        }
+
+        setInterval(atualizarCronometros, 10000); // Atualiza a cada 10 seg
+        atualizarCronometros();
+
+        // Alerta Sonoro para Novos Pedidos
         const totalAtual = {{ eracks|length + f2|length + agrosensores|length }};
-        const totalSalvo = localStorage.getItem('total_pedidos') || 0;
-
-        if (totalAtual > totalSalvo) {
-            document.getElementById('somNotificacao').play().catch(e => console.log("Áudio bloqueado"));
+        const totalAnterior = localStorage.getItem('last_total') || 0;
+        if (totalAtual > totalAnterior) {
+            document.getElementById('somAlerta').play().catch(e => console.log("Som bloqueado"));
         }
-        localStorage.setItem('total_pedidos', totalAtual);
+        localStorage.setItem('last_total', totalAtual);
     </script>
 </body>
 </html>
