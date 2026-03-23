@@ -2,194 +2,189 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel de Controle - Expedição Unificada</title>
+    <title>Expedição Unificada | Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary-eracks: #0284c7; /* Azul Profissional */
-            --primary-f2: #e11d48;     /* Vermelho Elegante */
-            --primary-agro: #16a34a;   /* Verde Sóbrio */
-            --border-color: #e2e8f0;
+            --bg-page: #f4f7f9;
+            --eracks-color: #0061ff; /* Azul Royal */
+            --f2-color: #ff4b2b;     /* Vermelho Vibrante */
+            --agro-color: #2ecc71;   /* Verde Esmeralda */
+            --text-dark: #2d3436;
         }
 
         body { 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            font-family: 'Inter', -apple-system, sans-serif;
-            letter-spacing: -0.01em;
+            background-color: var(--bg-page); 
+            font-family: 'Inter', sans-serif; 
+            color: var(--text-dark);
+            padding: 20px;
         }
 
-        .navbar-top {
-            background: white;
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 30px;
+        /* Cabeçalho Minimalista */
+        .header-main {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            padding: 0 10px;
         }
+        .header-main h1 { font-weight: 800; font-size: 1.5rem; letter-spacing: -1px; margin: 0; }
 
-        .column-title {
-            font-size: 0.85rem;
+        /* Colunas Estilo Painel de Controle */
+        .col-title {
+            font-size: 0.75rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 1.5px;
             margin-bottom: 20px;
+            padding-left: 5px;
             display: flex;
             align-items: center;
-            gap: 10px;
         }
+        .col-title span { width: 12px; height: 12px; border-radius: 3px; margin-right: 10px; }
 
-        .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; }
-
-        /* CARD PROFISSIONAL */
+        /* CARD PREMIUM */
         .card-pedido {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            background: #ffffff;
+            border: none;
+            border-radius: 16px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            border-left: 6px solid #dfe6e9;
         }
         .card-pedido:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
         }
 
-        /* IDENTIFICAÇÃO DA EMPRESA NO CARD */
-        .line-eracks { border-top: 4px solid var(--primary-eracks); }
-        .line-f2 { border-top: 4px solid var(--primary-f2); }
-        .line-agro { border-top: 4px solid var(--primary-agro); }
+        /* Cores de Borda por Empresa */
+        .border-eracks { border-left-color: var(--eracks-color); }
+        .border-f2 { border-left-color: var(--f2-color); }
+        .border-agro { border-left-color: var(--agro-color); }
 
-        .mkt-tag {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            background: #f1f5f9;
+        /* Detalhes do Card */
+        .mkt-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #636e72;
+            background: #f1f2f6;
             padding: 4px 10px;
-            border-radius: 6px;
-            text-transform: uppercase;
-        }
-
-        .pedido-numero { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
-
-        .cliente-nome {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin: 10px 0 5px 0;
-            color: var(--text-main);
-        }
-
-        .status-pill {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 3px 10px;
             border-radius: 20px;
             text-transform: uppercase;
         }
-        .status-aberto { background: #fef3c7; color: #92400e; } /* Amarelo Sutil */
 
-        .produtos-container {
-            margin-top: 15px;
+        .pedido-id { font-weight: 800; color: #b2bec3; font-size: 0.8rem; }
+
+        .cliente {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 12px 0 8px 0;
+            display: block;
+        }
+
+        .status-tag {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 50px;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .lista-produtos {
+            background: #fdfdfd;
+            border: 1px solid #f1f2f6;
+            border-radius: 12px;
             padding: 12px;
-            background: #f8fafc;
-            border-radius: 8px;
+            margin: 15px 0;
             font-size: 0.9rem;
-            border: 1px solid #f1f5f9;
+            line-height: 1.4;
         }
 
-        .valor { font-size: 1.25rem; font-weight: 800; color: var(--text-main); }
-        
-        .timer {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
+        .footer-card {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 5px;
+            border-top: 1px solid #f1f2f6;
+            padding-top: 12px;
         }
 
-        .alert-time { color: #e11d48 !important; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .valor-total { font-weight: 800; font-size: 1.2rem; color: #2d3436; }
+        
+        .timer-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #636e72;
+        }
+        .atrasado { color: var(--f2-color) !important; animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-    <nav class="navbar-top">
-        <div class="fw-bold"><i class="fa-solid fa-layer-group me-2"></i> EXPEDIÇÃO LIVE</div>
-        <div id="clock" class="text-muted small fw-bold"></div>
-    </nav>
+    <div class="header-main">
+        <h1>EXPEDIÇÃO <span style="color: var(--eracks-color);">LIVE</span></h1>
+        <div id="relogio" class="fw-bold text-muted">00:00:00</div>
+    </div>
 
-    <div class="container-fluid px-4">
+    <div class="container-fluid">
         <div class="row">
             
             <div class="col-md-4">
-                <div class="column-title"><span class="dot" style="background: var(--primary-eracks)"></span> ERACKS ({{ eracks|length }})</div>
-                {% for pedido in eracks %}
-                <div class="card-pedido line-eracks">
+                <div class="col-title"><span style="background: var(--eracks-color);"></span> ERACKS</div>
+                {% for p in eracks %}
+                <div class="card-pedido border-eracks">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                        <span class="pedido-numero">#{{ pedido.numero }}</span>
+                        <span class="mkt-label">{{ p.ecommerce }}</span>
+                        <span class="pedido-id">#{{ p.numero }}</span>
                     </div>
-                    <div class="cliente-nome">{{ pedido.cliente }}</div>
-                    <div class="status-pill status-aberto">{{ pedido.situacao }}</div>
-                    <div class="produtos-container">
-                        {{ pedido.produtos | safe }}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="valor">{{ pedido.valor }}</div>
-                        <div class="timer cronometro" data-chegada="{{ pedido.chegada }}"></div>
+                    <span class="cliente">{{ p.cliente }}</span>
+                    <span class="status-tag">{{ p.situacao }}</span>
+                    <div class="lista-produtos">{{ p.produtos | safe }}</div>
+                    <div class="footer-card">
+                        <span class="valor-total">{{ p.valor }}</span>
+                        <span class="timer-badge crono" data-time="{{ p.chegada }}">-- min</span>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
             <div class="col-md-4">
-                <div class="column-title"><span class="dot" style="background: var(--primary-f2)"></span> F2 ({{ f2|length }})</div>
-                {% for pedido in f2 %}
-                <div class="card-pedido line-f2">
+                <div class="col-title"><span style="background: var(--f2-color);"></span> F2</div>
+                {% for p in f2 %}
+                <div class="card-pedido border-f2">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                        <span class="pedido-numero">#{{ pedido.numero }}</span>
+                        <span class="mkt-label">{{ p.ecommerce }}</span>
+                        <span class="pedido-id">#{{ p.numero }}</span>
                     </div>
-                    <div class="cliente-nome">{{ pedido.cliente }}</div>
-                    <div class="status-pill status-aberto">{{ pedido.situacao }}</div>
-                    <div class="produtos-container">
-                        {{ pedido.produtos | safe }}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="valor">{{ pedido.valor }}</div>
-                        <div class="timer cronometro" data-chegada="{{ pedido.chegada }}"></div>
+                    <span class="cliente">{{ p.cliente }}</span>
+                    <span class="status-tag">{{ p.situacao }}</span>
+                    <div class="lista-produtos">{{ p.produtos | safe }}</div>
+                    <div class="footer-card">
+                        <span class="valor-total">{{ p.valor }}</span>
+                        <span class="timer-badge crono" data-time="{{ p.chegada }}">-- min</span>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
             <div class="col-md-4">
-                <div class="column-title"><span class="dot" style="background: var(--primary-agro)"></span> AGROSENSORES ({{ agrosensores|length }})</div>
-                {% for pedido in agrosensores %}
-                <div class="card-pedido line-agro">
+                <div class="col-title"><span style="background: var(--agro-color);"></span> AGRO</div>
+                {% for p in agrosensores %}
+                <div class="card-pedido border-agro">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                        <span class="pedido-numero">#{{ pedido.numero }}</span>
+                        <span class="mkt-label">{{ p.ecommerce }}</span>
+                        <span class="pedido-id">#{{ p.numero }}</span>
                     </div>
-                    <div class="cliente-nome">{{ pedido.cliente }}</div>
-                    <div class="status-pill status-aberto">{{ pedido.situacao }}</div>
-                    <div class="produtos-container">
-                        {{ pedido.produtos | safe }}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="valor">{{ pedido.valor }}</div>
-                        <div class="timer cronometro" data-chegada="{{ pedido.chegada }}"></div>
+                    <span class="cliente">{{ p.cliente }}</span>
+                    <span class="status-tag">{{ p.situacao }}</span>
+                    <div class="lista-produtos">{{ p.produtos | safe }}</div>
+                    <div class="footer-card">
+                        <span class="valor-total">{{ p.valor }}</span>
+                        <span class="timer-badge crono" data-time="{{ p.chegada }}">-- min</span>
                     </div>
                 </div>
                 {% endfor %}
@@ -201,40 +196,28 @@
     <audio id="alertaSonoro"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg"></audio>
 
     <script>
-        function atualizarCronometros() {
-            document.querySelectorAll('.cronometro').forEach(el => {
-                const chegada = new Date(el.getAttribute('data-chegada'));
-                const diffMin = Math.floor((new Date() - chegada) / 60000);
-                
-                let texto = diffMin < 1 ? "AGORA" : diffMin + " MIN";
-                if (diffMin >= 60) texto = Math.floor(diffMin/60) + "H " + (diffMin%60) + "M";
-                
-                el.innerHTML = `<i class="fa-regular fa-clock"></i> ${texto}`;
-                
-                if (diffMin >= 30) el.classList.add('alert-time');
-                else el.classList.remove('alert-time');
+        function updateTime() {
+            document.querySelectorAll('.crono').forEach(el => {
+                const chegada = new Date(el.getAttribute('data-time'));
+                const diff = Math.floor((new Date() - chegada) / 60000);
+                el.innerText = diff < 1 ? "AGORA" : "HÁ " + diff + " MIN";
+                if (diff >= 30) el.classList.add('atrasado');
             });
+            document.getElementById('relogio').innerText = new Date().toLocaleTimeString();
         }
 
-        function clock() {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('pt-BR');
-        }
-
-        setInterval(atualizarCronometros, 10000);
-        setInterval(clock, 1000);
-        atualizarCronometros();
-        clock();
-
-        // Reload para novos dados
+        setInterval(updateTime, 10000);
+        updateTime();
+        
+        // Refresh automático
         setTimeout(() => { window.location.reload(); }, 60000);
 
-        // Som de Alerta
-        const total = document.querySelectorAll('.card-pedido').length;
-        if (total > (localStorage.getItem('total_v4') || 0)) {
+        // Alerta sonoro
+        const count = document.querySelectorAll('.card-pedido').length;
+        if (count > (localStorage.getItem('last_count') || 0)) {
             document.getElementById('alertaSonoro').play().catch(() => {});
         }
-        localStorage.setItem('total_v4', total);
+        localStorage.setItem('last_count', count);
     </script>
 </body>
 </html>
