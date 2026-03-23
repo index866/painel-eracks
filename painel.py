@@ -5,27 +5,40 @@ import sys
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime, timedelta
 
-# Configuração de Log Profissional
+# 1. Configuração de Log (Para aparecer no Render)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, 
                     format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
+# 2. Definição do App (CORREÇÃO DO ERRO)
 app = Flask(__name__)
 
-ARQUIVOS = {"eracks": "pedidos_eracks.json", "f2": "pedidos_f2.json", "agrosensores": "pedidos_agro.json"}
-CONTAS = {"39544860000121": "eracks", "09653335000183": "f2", "07093835000182": "agrosensores"}
+# Configurações de arquivos e contas
+ARQUIVOS = {
+    "eracks": "pedidos_eracks.json",
+    "f2": "pedidos_f2.json",
+    "agrosensores": "pedidos_agro.json"
+}
+
+CONTAS = {
+    "39544860000121": "eracks",
+    "09653335000183": "f2",
+    "07093835000182": "agrosensores"
+}
 
 def carregar_dados(slug):
     arquivo = ARQUIVOS.get(slug)
     if not arquivo or not os.path.exists(arquivo): return []
     try:
-        with open(arquivo, 'r', encoding='utf-8') as f: return json.load(f)
+        with open(arquivo, 'r', encoding='utf-8') as f:
+            return json.load(f)
     except: return []
 
 def salvar_dados(dados, slug):
     arquivo = ARQUIVOS.get(slug)
     if arquivo:
-        with open(arquivo, 'w', encoding='utf-8') as f: json.dump(dados, f, indent=4, ensure_ascii=False)
+        with open(arquivo, 'w', encoding='utf-8') as f:
+            json.dump(dados, f, indent=4, ensure_ascii=False)
 
 @app.route('/')
 def index():
@@ -36,9 +49,9 @@ def index():
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
-    # LOG QUE APARECERÁ NO RENDER
+    # Isso vai mostrar exatamente o que o Tiny enviou nos logs do Render
     dados_brutos = request.get_data(as_text=True)
-    logger.info(f"DADOS RECEBIDOS DO TINY: {dados_brutos}")
+    logger.info(f"DADOS RECEBIDOS: {dados_brutos}")
 
     try:
         payload = request.get_json(silent=True) or request.form.to_dict()
@@ -48,60 +61,66 @@ def webhook_tiny():
         slug_conta = CONTAS.get(cnpj_recebido)
 
         if not slug_conta:
-            logger.warning(f"CNPJ {cnpj_recebido} NÃO MAPEADO")
+            logger.warning(f"CNPJ {cnpj_recebido} desconhecido")
             return jsonify({"status": "cnpj_desconhecido"}), 200
 
         info = payload.get('dados', payload)
-        pedido = info.get('pedido', info)
-        numero = str(pedido.get('numero', ''))
-        status = str(pedido.get('descricaoSituacao', '')).lower()
+        pedido_data = info.get('pedido', info)
+        numero = str(pedido_data.get('numero') or info.get('numero', ''))
+        status_bruto = str(pedido_data.get('descricaoSituacao') or info.get('descricaoSituacao') or '').lower()
 
-        if "aberto" in status or "aprovado" in status:
-            pedidos = carregar_dados(slug_conta)
+        pedidos = carregar_dados(slug_conta)
+
+        if "aberto" in status_bruto or "aprovado" in status_bruto:
             fuso = datetime.now() - timedelta(hours=3)
             
-            # TENTATIVA DE CAPTURAR VALOR (Testando várias chaves possíveis)
-            valor = pedido.get('total') or pedido.get('valor_total') or info.get('total') or "0,00"
+            # Captura valor e itens
+            valor_bruto = pedido_data.get('total') or info.get('total') or 0
+            ecommerce = (pedido_data.get('nome_ecommerce') or pedido_data.get('nomeEcommerce') or "Venda Direta").strip()
             
-            # TENTATIVA DE CAPTURAR ITENS
-            itens_brutos = pedido.get('itens', [])
-            produtos = []
-            for i in itens_brutos:
-                item_data = i.get('item', i)
-                desc = item_data.get('descricao', 'Sem Nome')
-                sku = item_data.get('codigo', 'S/SKU')
-                qtd = int(float(item_data.get('quantidade', 1)))
-                produtos.append(f"{qtd}x [{sku}] {desc}")
+            itens_lista = pedido_data.get('itens', [])
+            produtos_fmt = []
+            for item in itens_lista:
+                obj = item.get('item', item)
+                desc = obj.get('descricao', 'Produto')
+                sku = obj.get('codigo', 'S/SKU')
+                qtd = int(float(obj.get('quantidade', 1)))
+                produtos_fmt.append(f"{qtd}x [{sku}] {desc}")
             
-            lista_produtos = " | ".join(produtos) if produtos else "Itens não carregados - Verifique Config Webhook"
+            produtos_str = " | ".join(produtos_fmt) if produtos_fmt else "Itens não carregados - Verifique o Tiny"
+            cliente_info = pedido_data.get('cliente') or {}
+            nome_cliente = cliente_info.get('nome', 'Cliente') if isinstance(cliente_info, dict) else str(cliente_info)
 
-            # Formata Valor
+            # Formata valor para R$
             try:
-                valor_f = f"R$ {float(valor):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                valor_f = f"R$ {float(valor_bruto):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
             except:
-                valor_f = f"R$ {valor}"
+                valor_f = f"R$ {valor_bruto}"
 
-            # Atualiza ou Adiciona
-            novo_p = {
+            # Remove pedido antigo se já existir para não duplicar
+            pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
+            
+            pedidos.append({
                 "numero": numero,
-                "cliente": (pedido.get('cliente') or {}).get('nome', 'Cliente'),
-                "ecommerce": pedido.get('nome_ecommerce') or pedido.get('nomeEcommerce') or "Venda Direta",
-                "situacao": status.upper(),
+                "cliente": nome_cliente,
+                "ecommerce": ecommerce,
+                "situacao": status_bruto.upper(),
                 "ultima_atualizacao": fuso.strftime('%H:%M'),
                 "chegada": fuso.isoformat(),
                 "valor": valor_f,
-                "produtos": lista_produtos
-            }
+                "produtos": produtos_str
+            })
+        else:
+            # Remove o pedido se ele não estiver mais em aberto/aprovado
+            pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
 
-            pedidos = [p for p in pedidos if str(p['numero']) != numero] # Remove duplicado
-            pedidos.append(novo_p)
-            salvar_dados(pedidos, slug_conta)
-            logger.info(f"PEDIDO {numero} ADICIONADO/ATUALIZADO")
-        
+        salvar_dados(pedidos, slug_conta)
         return jsonify({"status": "success"}), 200
+
     except Exception as e:
-        logger.error(f"ERRO PROCESSAMENTO: {str(e)}")
+        logger.error(f"Erro: {str(e)}")
         return jsonify({"status": "error"}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
