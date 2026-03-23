@@ -5,117 +5,88 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-ARQUIVO_JSON = 'pedidos_eracks.json'
+# Configuração dos CNPJs de cada conta (Preencha com os CNPJs corretos do seu Tiny)
+CONTAS = {
+    "39544860000121": "eracks", # CNPJ da Eracks (visto no seu log)
+    "00000000000000": "f2",     # COLOQUE O CNPJ DA CONTA F2 AQUI
+    "11111111111111": "agrosensores" # COLOQUE O CNPJ DA AGROSENSORES AQUI
+}
 
-def carregar_pedidos():
-    if not os.path.exists(ARQUIVO_JSON):
-        return []
+def carregar_dados(conta):
+    arquivo = f'pedidos_{conta}.json'
+    if not os.path.exists(arquivo): return []
     try:
-        with open(ARQUIVO_JSON, 'r', encoding='utf-8') as f:
+        with open(arquivo, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except:
-        return []
+    except: return []
 
-def salvar_pedidos(pedidos):
-    with open(ARQUIVO_JSON, 'w', encoding='utf-8') as f:
-        json.dump(pedidos, f, indent=4, ensure_ascii=False)
+def salvar_dados(dados, conta):
+    arquivo = f'pedidos_{conta}.json'
+    with open(arquivo, 'w', encoding='utf-8') as f:
+        json.dump(dados, f, indent=4, ensure_ascii=False)
 
 @app.route('/')
 def index():
-    pedidos = carregar_pedidos()
-    return render_template('index.html', pedidos=list(reversed(pedidos)))
+    return render_template('index.html', 
+                           eracks=list(reversed(carregar_dados("eracks"))),
+                           f2=list(reversed(carregar_dados("f2"))),
+                           agrosensores=list(reversed(carregar_dados("agrosensores"))))
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
     try:
         payload = request.get_json(silent=True) or request.form.to_dict()
-        if not payload:
-            return jsonify({"status": "vazio"}), 200
+        if not payload: return jsonify({"status": "vazio"}), 200
 
-        print(f"DEBUG PAYLOAD: {payload}")
+        # Identifica de qual conta vem o pedido pelo CNPJ
+        cnpj_recebido = str(payload.get('cnpj', ''))
+        slug_conta = CONTAS.get(cnpj_recebido)
+
+        if not slug_conta:
+            print(f"CNPJ {cnpj_recebido} não cadastrado no painel.")
+            return jsonify({"status": "cnpj_desconhecido"}), 200
 
         info = payload.get('dados', payload)
         dados_pedido = info.get('pedido', info)
         numero = str(dados_pedido.get('numero') or info.get('numero', ''))
-        
-        # 1. Tratamento do E-commerce (Blindagem contra vazio)
-        # Tenta pegar de várias formas e remove espaços
-        ecommerce_raw = dados_pedido.get('nomeEcommerce') or info.get('nomeEcommerce')
-        if ecommerce_raw and str(ecommerce_raw).strip():
-            ecommerce = str(ecommerce_raw).strip()
-        else:
-            ecommerce = "Venda Direta"
-
-        # 2. Tratamento do Valor
-        valor_bruto = (
-            dados_pedido.get('total') or 
-            dados_pedido.get('valor') or 
-            info.get('total') or 0.00
-        )
-        try:
-            valor_num = float(valor_bruto)
-            valor_formatado = f"R$ {valor_num:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-        except:
-            valor_num = 0
-            valor_formatado = "R$ 0,00"
-
-        # 3. Tratamento do Status (Apenas "Em Aberto")
         status_bruto = str(dados_pedido.get('descricaoSituacao') or info.get('descricaoSituacao') or '').lower()
-        
-        cliente_obj = dados_pedido.get('cliente') or info.get('cliente', {})
-        nome_cliente = cliente_obj.get('nome', 'Cliente não identificado') if isinstance(cliente_obj, dict) else str(cliente_obj)
 
-        if not numero or numero == 'None':
-            return jsonify({"status": "error"}), 200
+        pedidos = carregar_dados(slug_conta)
 
-        pedidos = carregar_pedidos()
-
-        # REGRA: Só fica na tela se o status for "Em Aberto"
         if "aberto" in status_bruto:
-            fuso_brasil = datetime.now() - timedelta(hours=3)
-            agora = fuso_brasil.strftime('%H:%M')
+            fuso = datetime.now() - timedelta(hours=3)
+            agora = fuso.strftime('%H:%M')
             
+            valor_bruto = dados_pedido.get('total') or info.get('total') or 0
+            ecommerce = (dados_pedido.get('nomeEcommerce') or info.get('nomeEcommerce') or "Venda Direta").strip()
+            cliente = (dados_pedido.get('cliente', {})).get('nome', 'Cliente')
+
             encontrado = False
             for p in pedidos:
-                if str(p.get('numero')) == numero:
+                if str(p['numero']) == numero:
                     p['situacao'] = status_bruto.upper()
-                    p['cliente_exibicao'] = nome_cliente
                     p['ultima_atualizacao'] = agora
-                    
-                    # Só atualiza e-commerce e valor se eles não vierem vazios do Tiny
-                    if ecommerce != "Venda Direta" or p.get('ecommerce') is None:
-                        p['ecommerce'] = ecommerce
-                    
-                    if valor_num > 0:
-                        p['valor'] = valor_formatado
-                    
+                    if float(valor_bruto) > 0: p['valor'] = f"R$ {float(valor_bruto):,.2f}"
                     encontrado = True
                     break
             
             if not encontrado:
                 pedidos.append({
                     "numero": numero,
-                    "cliente_exibicao": nome_cliente,
+                    "cliente": cliente,
                     "ecommerce": ecommerce,
-                    "valor": valor_formatado if valor_num > 0 else "---",
                     "situacao": status_bruto.upper(),
-                    "ultima_atualizacao": agora
+                    "ultima_atualizacao": agora,
+                    "valor": f"R$ {float(valor_bruto):,.2f}" if float(valor_bruto) > 0 else "---"
                 })
         else:
-            # Se mudar para qualquer outro status (ex: "Pronto para envio"), remove da tela
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
-            print(f"--- Pedido {numero} REMOVIDO por status: {status_bruto}")
 
-        salvar_pedidos(pedidos)
+        salvar_dados(pedidos, slug_conta)
         return jsonify({"status": "success"}), 200
-
     except Exception as e:
-        print(f"ERRO: {e}")
+        print(f"Erro: {e}")
         return jsonify({"status": "error"}), 200
-
-@app.route('/ping')
-def ping():
-    return "OK", 200
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
