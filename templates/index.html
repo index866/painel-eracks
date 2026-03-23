@@ -1,31 +1,108 @@
-<style>
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 10px; overflow: hidden; }
-    .header-main { background: #1e293b; color: white; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-    
-    .container-colunas { display: flex; gap: 10px; height: 88vh; }
-    .coluna { flex: 1; background: #cbd5e1; border-radius: 10px; display: flex; flex-direction: column; padding: 10px; }
-    
-    .titulo-coluna { text-align: center; padding: 12px; border-radius: 8px; color: white; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; text-transform: uppercase; }
-    
-    /* CORES DAS COLUNAS */
-    .bg-eracks { background: #0044cc; } /* Azul */
-    .bg-f2 { background: #dc2626; }     /* Vermelho */
-    .bg-agro { background: #16a34a; }   /* Verde */
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Expedição Unificada</title>
+    <meta http-equiv="refresh" content="30">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 10px; overflow: hidden; }
+        .header-main { background: #1e293b; color: white; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .container-colunas { display: flex; gap: 10px; height: 88vh; }
+        .coluna { flex: 1; background: #cbd5e1; border-radius: 10px; display: flex; flex-direction: column; padding: 10px; min-width: 0; }
+        
+        .titulo-coluna { text-align: center; padding: 12px; border-radius: 8px; color: white; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; text-transform: uppercase; }
+        
+        /* CORES DAS COLUNAS */
+        .bg-eracks { background: #0044cc; } /* Azul */
+        .bg-f2 { background: #dc2626; }     /* Vermelho */
+        .bg-agro { background: #16a34a; }   /* Verde */
 
-    .lista-pedidos { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
-    
-    .card { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border-left: 8px solid #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    
-    .card-top { display: flex; justify-content: space-between; font-size: 0.75em; font-weight: bold; color: #64748b; margin-bottom: 5px; }
-    .valor { color: #16a34a; font-size: 1.1em; font-weight: 800; }
-    h4 { margin: 8px 0; font-size: 1.2em; display: flex; justify-content: space-between; }
-    .cliente { font-size: 0.9em; color: #334155; font-weight: 600; text-transform: uppercase; }
-    
-    .footer-card { font-size: 0.75em; color: #94a3b8; margin-top: 10px; display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 5px; }
-    .status-badge { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; color: #475569; }
+        .lista-pedidos { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
+        
+        .card { background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border-left: 8px solid #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .card-top { display: flex; justify-content: space-between; font-size: 0.75em; font-weight: bold; color: #64748b; margin-bottom: 5px; }
+        .valor { color: #16a34a; font-size: 1.1em; font-weight: 800; }
+        h4 { margin: 8px 0; font-size: 1.2em; display: flex; justify-content: space-between; align-items: center; }
+        .cliente { font-size: 0.9em; color: #334155; font-weight: 600; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        .footer-card { font-size: 0.75em; color: #94a3b8; margin-top: 10px; display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 5px; }
+        .status-badge { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; color: #475569; }
 
-    /* AJUSTE DAS BORDAS DOS CARDS POR COLUNA */
-    .coluna:nth-child(1) .card { border-left-color: #0044cc; } /* Borda Azul na Eracks */
-    .coluna:nth-child(2) .card { border-left-color: #dc2626; } /* Borda Vermelha na F2 */
-    .coluna:nth-child(3) .card { border-left-color: #16a34a; } /* Borda Verde na Agro */
-</style>
+        /* AJUSTE DAS BORDAS DOS CARDS POR COLUNA */
+        .coluna-eracks .card { border-left-color: #0044cc; }
+        .coluna-f2 .card { border-left-color: #dc2626; }
+        .coluna-agro .card { border-left-color: #16a34a; }
+    </style>
+</head>
+<body>
+
+    <div class="header-main">
+        <span>📦 EXPEDIÇÃO UNIFICADA</span>
+        <button onclick="ativarSom()" style="background: #ff9800; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">🔔 ATIVAR SOM</button>
+    </div>
+
+    <audio id="somNotificacao" src="https://actions.google.com/sounds/v1/foley/electronic_chime.ogg" preload="auto"></audio>
+
+    <div class="container-colunas">
+        <div class="coluna coluna-eracks">
+            <div class="titulo-coluna bg-eracks">ERACKS ({{ eracks|length }})</div>
+            <div class="lista-pedidos">
+                {% for p in eracks %}
+                <div class="card">
+                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
+                    <h4><span>#{{ p.numero }}</span> <span class="status-badge">{{ p.situacao }}</span></h4>
+                    <div class="cliente">{{ p.cliente }}</div>
+                    <div class="footer-card">🕒 {{ p.ultima_atualizacao }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="coluna coluna-f2">
+            <div class="titulo-coluna bg-f2">F2 DESIGN ({{ f2|length }})</div>
+            <div class="lista-pedidos">
+                {% for p in f2 %}
+                <div class="card">
+                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
+                    <h4><span>#{{ p.numero }}</span> <span class="status-badge">{{ p.situacao }}</span></h4>
+                    <div class="cliente">{{ p.cliente }}</div>
+                    <div class="footer-card">🕒 {{ p.ultima_atualizacao }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="coluna coluna-agro">
+            <div class="titulo-coluna bg-agro">AGROSENSORES ({{ agrosensores|length }})</div>
+            <div class="lista-pedidos">
+                {% for p in agrosensores %}
+                <div class="card">
+                    <div class="card-top"><span>{{ p.ecommerce }}</span> <span class="valor">{{ p.valor }}</span></div>
+                    <h4><span>#{{ p.numero }}</span> <span class="status-badge">{{ p.situacao }}</span></h4>
+                    <div class="cliente">{{ p.cliente }}</div>
+                    <div class="footer-card">🕒 {{ p.ultima_atualizacao }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function ativarSom() {
+            const som = document.getElementById('somNotificacao');
+            som.play().then(() => { som.pause(); som.currentTime = 0; alert("Som ativado!"); });
+        }
+
+        const totalAtual = {{ eracks|length + f2|length + agrosensores|length }};
+        const totalSalvo = localStorage.getItem('total_pedidos') || 0;
+
+        if (totalAtual > totalSalvo) {
+            document.getElementById('somNotificacao').play().catch(e => console.log("Áudio bloqueado"));
+        }
+        localStorage.setItem('total_pedidos', totalAtual);
+    </script>
+</body>
+</html>
