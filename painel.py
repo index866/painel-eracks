@@ -29,12 +29,12 @@ CONFIG_EMPRESAS = {
     "07093835000182": {
         "slug": "agrosensores",
         "arquivo": "pedidos_agro.json",
-        "token": "COLOQUE_AQUI_O_TOKEN_DA_AGRO"
+        "token": "db584433551951c62935da579bd65b9031d3e919"
     }
 }
 
 def buscar_estoque(sku, token):
-    """ Consulta o saldo atual do produto no Tiny via API """
+    """ Consulta o saldo atual do produto no Tiny """
     url = "https://api.tiny.com.br/api2/produto.obter.estoque.php"
     params = {'token': token, 'codigo': sku, 'formato': 'json'}
     try:
@@ -42,12 +42,11 @@ def buscar_estoque(sku, token):
         dados = res.json()
         saldo = dados.get('retorno', {}).get('produto', {}).get('saldo', 0)
         return float(saldo)
-    except Exception as e:
-        logger.error(f"Erro ao buscar estoque SKU {sku}: {e}")
+    except:
         return 0
 
 def buscar_detalhes_tiny(id_pedido, token):
-    """ Consulta Detalhes, Marketplace e Estoque de cada item via API v2 """
+    """ Busca Marketplace, Itens e Estoque """
     url = "https://api.tiny.com.br/api2/pedido.obter.php"
     params = {'token': token, 'id': id_pedido, 'formato': 'json'}
     try:
@@ -57,53 +56,30 @@ def buscar_detalhes_tiny(id_pedido, token):
         if retorno.get('status') == 'OK':
             p = retorno.get('pedido', {})
             
-            # --- LÓGICA REFORÇADA PARA MARKETPLACE ---
-            # Tenta encontrar o canal em campos que a v1 do webhook ignora
-            mkt = (
-                p.get('nome_ecommerce') or 
-                p.get('nome_omnichannel') or 
-                p.get('intermediador', {}).get('nome') or 
-                p.get('canal_venda') or
-                ""
-            )
-
-            # Identificação por padrão de ID (Caso os campos acima falhem)
-            if not mkt or mkt == "":
+            # Identificação do Marketplace
+            mkt = (p.get('nome_ecommerce') or p.get('nome_omnichannel') or 
+                   p.get('intermediador', {}).get('nome') or p.get('canal_venda') or "")
+            
+            if not mkt:
                 venda_orig = str(p.get('id_venda_original', ''))
-                if "MLB" in venda_orig:
-                    mkt = "Mercado Livre"
-                elif "shopee" in venda_orig.lower():
-                    mkt = "Shopee"
-                else:
-                    mkt = "Venda Direta"
+                mkt = "MERCADO LIVRE" if "MLB" in venda_orig else "VENDA DIRETA"
 
             itens = p.get('itens', [])
             lista_prod = []
             for i in itens:
                 item = i.get('item', {})
-                sku = item.get('codigo', 'S/SKU')
-                desc = item.get('descricao', 'Produto')
+                sku, desc = item.get('codigo', 'S/SKU'), item.get('descricao', 'Produto')
                 qtd_pedida = int(float(item.get('quantidade', 1)))
                 
-                # BUSCA ESTOQUE REAL NO TINY
                 saldo_atual = buscar_estoque(sku, token)
+                cor = "#2e7d32" if saldo_atual >= qtd_pedida else "#d32f2f"
+                status = f'✅ Disp: {int(saldo_atual)}' if saldo_atual >= qtd_pedida else f'❌ FALTA: {int(saldo_atual)}'
                 
-                # Define cor visual (Verde para OK, Vermelho para Falta)
-                if saldo_atual >= qtd_pedida:
-                    status_estoque = f'<span style="color: #2e7d32; font-weight: bold;">✅ Disponível: {int(saldo_atual)}</span>'
-                else:
-                    status_estoque = f'<span style="color: #d32f2f; font-weight: bold;">❌ FALTA (Estoque: {int(saldo_atual)})</span>'
-                
-                lista_prod.append(f"<b>{qtd_pedida}x</b> [{sku}] {desc}<br>{status_estoque}")
+                lista_prod.append(f"<b>{qtd_pedida}x</b> [{sku}] {desc}<br><span style='color:{cor};font-weight:bold;'>{status}</span>")
             
-            return {
-                "valor": p.get('total_pedido', 0),
-                "mkt": mkt.upper(),
-                "produtos": "<br><br>".join(lista_prod)
-            }
-    except Exception as e:
-        logger.error(f"Erro na consulta API Tiny Detalhes: {e}")
-    return None
+            return {"valor": p.get('total_pedido', 0), "mkt": mkt.upper(), "produtos": "<br><br>".join(lista_prod)}
+    except:
+        return None
 
 def carregar_dados(arquivo):
     if not os.path.exists(arquivo): return []
@@ -124,66 +100,43 @@ def index():
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
-    # Suporte para ping de teste do Tiny
-    if not request.data: return jsonify({"status": "ok"}), 200
-
     payload = request.get_json(silent=True) or request.form.to_dict()
-    
-    # Ignora webhooks de alteração de estoque para não poluir o painel de vendas
-    if payload.get('tipo') == 'estoque':
-        return jsonify({"status": "estoque_ignorado"}), 200
+    if not payload or payload.get('tipo') == 'estoque': return jsonify({"status": "ok"}), 200
 
     try:
         cnpj = str(payload.get('cnpj', '')).replace('.', '').replace('/', '').replace('-', '').strip()
         config = CONFIG_EMPRESAS.get(cnpj)
-
-        if not config:
-            logger.warning(f"CNPJ {cnpj} não configurado.")
-            return jsonify({"status": "cnpj_desconhecido"}), 200
+        if not config: return jsonify({"status": "cnpj_erro"}), 200
 
         dados_webhook = payload.get('dados', {})
-        id_pedido = dados_webhook.get('id')
-        numero = str(dados_webhook.get('numero', ''))
+        id_pedido, numero = dados_webhook.get('id'), str(dados_webhook.get('numero', ''))
         status = str(dados_webhook.get('descricaoSituacao', '')).lower()
 
-        arquivo_destino = config['arquivo']
-        pedidos = carregar_dados(arquivo_destino)
+        pedidos = carregar_dados(config['arquivo'])
         
-        # Status que devem aparecer no painel (ajuste conforme seu fluxo no Tiny)
-        situacoes_vivas = ["aberto", "aprovado", "preparando", "pronto", "separacao"]
-        
-        if any(x in status for x in situacoes_vivas):
-            # Chama a função de investigação (Marketplace + Itens + Estoque)
+        if any(x in status for x in ["aberto", "aprovado", "preparando", "pronto", "separacao"]):
             detalhes = buscar_detalhes_tiny(id_pedido, config['token'])
-            
             fuso = datetime.now() - timedelta(hours=3)
-            valor_raw = detalhes['valor'] if detalhes else 0
-            valor_f = f"R$ {float(valor_raw):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+            
+            valor_f = f"R$ {float(detalhes['valor'] if detalhes else 0):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
 
-            # Remove duplicata antes de adicionar a versão atualizada
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
             pedidos.append({
                 "numero": numero,
                 "cliente": dados_webhook.get('cliente', {}).get('nome', 'Cliente'),
                 "ecommerce": detalhes['mkt'] if detalhes else "VENDA DIRETA",
                 "situacao": status.upper(),
-                "ultima_atualizacao": fuso.strftime('%H:%M'),
-                "chegada": fuso.isoformat(),
+                "chegada": fuso.isoformat(), # IMPORTANTE PARA O CRONÔMETRO
                 "valor": valor_f,
-                "produtos": detalhes['produtos'] if detalhes else "Carregando informações..."
+                "produtos": detalhes['produtos'] if detalhes else "Consultando..."
             })
-            logger.info(f"Pedido {numero} da {config['slug']} atualizado com sucesso.")
         else:
-            # Se o pedido foi cancelado ou faturado, removemos da visualização ativa
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
 
-        salvar_dados(pedidos, arquivo_destino)
+        salvar_dados(pedidos, config['arquivo'])
         return jsonify({"status": "success"}), 200
-    except Exception as e:
-        logger.error(f"Erro geral no webhook: {str(e)}")
+    except:
         return jsonify({"status": "error"}), 200
 
 if __name__ == '__main__':
-    # Porta padrão do Render
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
