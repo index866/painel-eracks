@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Expedição Pro</title>
+    <title>Expedição Unificada - Tema Claro</title>
     <meta http-equiv="refresh" content="60">
     <style>
         :root {
-            --bg-body: #0f172a;
-            --bg-col: #1e293b;
-            --text-main: #f8fafc;
+            --bg-body: #f1f5f9;
+            --bg-col: #e2e8f0;
+            --card-white: #ffffff;
+            --text-dark: #1e293b;
             --color-eracks: #2563eb;
             --color-f2: #dc2626;
             --color-agro: #16a34a;
         }
 
-        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-dark); margin: 0; padding: 10px; overflow: hidden; }
         
         .header-main { 
-            background: rgba(30, 41, 59, 0.8); padding: 10px 20px; text-align: center; 
+            background: #ffffff; padding: 10px 20px; text-align: center; 
             border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; 
-            align-items: center; border: 1px solid #334155;
+            align-items: center; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .container-colunas { display: flex; gap: 12px; height: 88vh; }
@@ -28,73 +29,68 @@
         .coluna { 
             flex: 1; background: var(--bg-col); border-radius: 12px; 
             display: flex; flex-direction: column; padding: 10px; 
-            border: 1px solid #334155; min-width: 0;
+            border: 1px solid #cbd5e1; min-width: 0;
         }
 
         .titulo-coluna { 
             text-align: center; padding: 12px; border-radius: 8px; color: white; 
-            font-weight: 800; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;
+            font-weight: 800; margin-bottom: 15px; text-transform: uppercase;
         }
 
-        .bg-eracks { background: var(--color-eracks); box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); }
-        .bg-f2 { background: var(--color-f2); box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4); }
-        .bg-agro { background: var(--color-agro); box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4); }
+        .bg-eracks { background: var(--color-eracks); }
+        .bg-f2 { background: var(--color-f2); }
+        .bg-agro { background: var(--color-agro); }
 
-        .lista-pedidos { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
+        .lista-pedidos { overflow-y: auto; flex-grow: 1; }
 
-        /* Estilo do Card */
+        /* Card Visual Tema Claro */
         .card { 
-            background: #ffffff; color: #1e293b; border-radius: 12px; 
+            background: var(--card-white); color: var(--text-dark); border-radius: 12px; 
             margin-bottom: 15px; padding: 15px; position: relative;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); border-left: 10px solid #475569;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 10px solid #475569;
         }
 
-        .status-aberto { background: #fffbeb; border-left-color: #f59e0b; }
+        .status-aberto { border-left-color: #f59e0b !important; background: #fffdf5; }
 
-        .num-pedido { font-size: 1.8em; font-weight: 900; line-height: 1; color: #0f172a; }
+        .num-pedido { font-size: 2em; font-weight: 900; color: #0f172a; display: block; }
         
-        .cliente { font-size: 0.9em; font-weight: 700; color: #475569; display: block; margin: 5px 0; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cliente { font-size: 0.95em; font-weight: 700; color: #475569; text-transform: uppercase; display: block; margin: 5px 0; }
 
         /* Tags Marketplace */
-        .mkt-tag { font-size: 0.7em; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
-        .tag-ml { background: #ffe600; color: #000; }
+        .mkt-tag { font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+        .tag-ml { background: #ffe600; color: #000; border: 1px solid #e6cf00; }
         .tag-amazon { background: #232f3e; color: #fff; }
         .tag-shopee { background: #ee4d2d; color: #fff; }
-        .tag-venda-direta { background: #e2e8f0; color: #475569; }
+        .tag-venda-direta { background: #cbd5e1; color: #475569; }
 
         .lista-produtos { 
             background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px;
-            font-size: 0.85em; font-weight: 600; color: #1e293b; border: 1px dashed #cbd5e1;
+            font-size: 0.9em; font-weight: 600; color: #1e293b; border: 1px solid #e2e8f0;
             line-height: 1.4;
         }
 
-        .valor-total { font-size: 1.1em; font-weight: 800; color: #16a34a; margin-top: 8px; display: block; }
+        .valor-total { font-size: 1.2em; font-weight: 800; color: #16a34a; margin-top: 8px; display: block; }
 
         .tempo-cronometro { 
             position: absolute; top: 15px; right: 15px; 
             background: #fee2e2; color: #ef4444; 
-            padding: 2px 8px; border-radius: 5px; font-size: 0.75em; font-weight: 800;
+            padding: 2px 8px; border-radius: 5px; font-size: 0.8em; font-weight: 800;
         }
 
-        /* Cores de Borda por Coluna */
+        /* Borda por Coluna */
         .col-eracks .card { border-left-color: var(--color-eracks); }
         .col-f2 .card { border-left-color: var(--color-f2); }
         .col-agro .card { border-left-color: var(--color-agro); }
-
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header-main">
-        <div style="font-size: 1.2em; font-weight: 800;">🚀 PAINEL DE EXPEDIÇÃO UNIFICADO</div>
-        <div>
-            <button onclick="ativarAudio()" style="background:#f59e0b; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🔔 ATIVAR SOM</button>
-        </div>
+        <div style="font-size: 1.2em; font-weight: 800; color: #1e293b;">📋 EXPEDIÇÃO UNIFICADA</div>
+        <button onclick="ativarAudio()" style="background:#f59e0b; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🔔 ATIVAR SOM</button>
     </div>
 
-    <audio id="somAlerta" src="https://actions.google.com/sounds/v1/foley/electronic_chime.ogg" preload="auto"></audio>
+    <audio id="somAlerta" src="https://actions.google.com/sounds/v1/foley/electronic_chime.ogg"></audio>
 
     <div class="container-colunas">
         
@@ -115,7 +111,7 @@
                         {{ p.ecommerce }}
                     </span>
 
-                    <div class="lista-produtos">📦 {{ p.produtos if p.produtos else 'Itens não carregados' }}</div>
+                    <div class="lista-produtos">📦 {{ p.produtos if p.produtos else 'Itens não carregados - Verifique o Tiny' }}</div>
                     <span class="valor-total">{{ p.valor }}</span>
                 </div>
                 {% endfor %}
@@ -178,24 +174,18 @@
             som.play().then(() => { som.pause(); som.currentTime = 0; alert("Som Ativado!"); });
         }
 
-        // Lógica do Cronómetro
         function atualizarCronometros() {
             const agora = new Date();
             document.querySelectorAll('.tempo-cronometro').forEach(el => {
                 const chegada = new Date(el.getAttribute('data-chegada'));
-                const diffMs = agora - chegada;
-                const diffMin = Math.floor(diffMs / 60000);
+                const diffMin = Math.floor((agora - chegada) / 60000);
                 el.innerText = diffMin + " min";
-                
-                // Se passar de 30 min, fica com fundo vermelho forte
                 if(diffMin >= 30) { el.style.background = "#ef4444"; el.style.color = "white"; }
             });
         }
-
-        setInterval(atualizarCronometros, 10000); // Atualiza a cada 10 seg
+        setInterval(atualizarCronometros, 10000);
         atualizarCronometros();
 
-        // Alerta Sonoro para Novos Pedidos
         const totalAtual = {{ eracks|length + f2|length + agrosensores|length }};
         const totalAnterior = localStorage.getItem('last_total') || 0;
         if (totalAtual > totalAnterior) {
