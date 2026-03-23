@@ -61,14 +61,22 @@
     <script>
         function ativarAudio() {
             const som = document.getElementById('somNotificacao');
-            som.play().then(() => { som.pause(); som.currentTime = 0; alert("Som ativado!"); });
+            som.play().then(() => { 
+                som.pause(); 
+                som.currentTime = 0; 
+                alert("Som de notificação ativado!"); 
+            }).catch(error => {
+                console.error("Erro ao ativar áudio:", error);
+            });
         }
 
         const totalAtual = {{ pedidos|length }};
         const totalAnterior = localStorage.getItem('eracks_count') || 0;
 
+        // Toca o som apenas se o número de pedidos na tela aumentar
         if (totalAtual > totalAnterior) {
-            document.getElementById('somNotificacao').play();
+            const som = document.getElementById('somNotificacao');
+            som.play().catch(e => console.log("Áudio aguardando interação do usuário."));
         }
         localStorage.setItem('eracks_count', totalAtual);
     </script>
