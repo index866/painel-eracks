@@ -6,7 +6,6 @@ import requests
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime, timedelta
 
-# Configuração de Log para o Render
 logging.basicConfig(stream=sys.stderr, level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ CONFIG_EMPRESAS = {
     "39544860000121": {
         "slug": "eracks",
         "arquivo": "pedidos_eracks.json",
-        "token": "e8cfcc618814f39c97a3594f2ed3e6829a758dc4" # TOKEN QUE VOCÊ ENVIOU
+        "token": "e8cfcc618814f39c97a3594f2ed3e6829a758dc4"
     },
     "09653335000183": {
         "slug": "f2",
@@ -33,8 +32,20 @@ CONFIG_EMPRESAS = {
     }
 }
 
+def buscar_estoque(sku, token):
+    """ Consulta o saldo atual do produto no Tiny """
+    url = "https://api.tiny.com.br/api2/produto.obter.estoque.php"
+    params = {'token': token, 'codigo': sku, 'formato': 'json'}
+    try:
+        res = requests.get(url, params=params, timeout=5)
+        dados = res.json()
+        saldo = dados.get('retorno', {}).get('produto', {}).get('saldo', 0)
+        return float(saldo)
+    except:
+        return 0
+
 def buscar_detalhes_tiny(id_pedido, token):
-    """ Consulta a API do Tiny para pegar itens e valores que a v1 não envia """
+    """ Consulta Detalhes, Marketplace e Estoque de cada item """
     url = "https://api.tiny.com.br/api2/pedido.obter.php"
     params = {'token': token, 'id': id_pedido, 'formato': 'json'}
     try:
@@ -43,19 +54,29 @@ def buscar_detalhes_tiny(id_pedido, token):
         retorno = dados.get('retorno', {})
         if retorno.get('status') == 'OK':
             p = retorno.get('pedido', {})
+            
+            # Tenta encontrar o marketplace em vários campos possíveis
+            mkt = p.get('nome_ecommerce') or p.get('nome_omnichannel') or p.get('id_venda_original') or "Venda Direta"
+            if not mkt or mkt == "": mkt = "Venda Direta"
+
             itens = p.get('itens', [])
             lista_prod = []
             for i in itens:
                 item = i.get('item', {})
-                qtd = int(float(item.get('quantidade', 1)))
                 sku = item.get('codigo', 'S/SKU')
                 desc = item.get('descricao', 'Produto')
-                lista_prod.append(f"{qtd}x [{sku}] {desc}")
+                qtd_pedida = int(float(item.get('quantidade', 1)))
+                
+                # BUSCA ESTOQUE REAL NO MOMENTO
+                saldo_atual = buscar_estoque(sku, token)
+                status_estoque = f"✅ Disp: {int(saldo_atual)}" if saldo_atual >= qtd_pedida else f"❌ Falta (Estoque: {int(saldo_atual)})"
+                
+                lista_prod.append(f"{qtd_pedida}x [{sku}] {desc} | {status_estoque}")
             
             return {
                 "valor": p.get('total_pedido', 0),
-                "mkt": p.get('nome_ecommerce') or "Venda Direta",
-                "produtos": " | ".join(lista_prod) if lista_prod else "Sem itens"
+                "mkt": mkt,
+                "produtos": " <br> ".join(lista_prod) # Usando <br> para quebrar linha no card
             }
     except Exception as e:
         logger.error(f"Erro na consulta API Tiny: {e}")
@@ -73,7 +94,6 @@ def salvar_dados(dados, arquivo):
 
 @app.route('/')
 def index():
-    # Carrega os dados de cada arquivo para exibir nas colunas do painel
     return render_template('index.html', 
                            eracks=list(reversed(carregar_dados("pedidos_eracks.json"))),
                            f2=list(reversed(carregar_dados("pedidos_f2.json"))),
@@ -82,16 +102,12 @@ def index():
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
     payload = request.get_json(silent=True) or request.form.to_dict()
-    if not payload or payload.get('tipo') == 'estoque':
-        return jsonify({"status": "ignorado"}), 200
+    if not payload or payload.get('tipo') == 'estoque': return jsonify({"status": "ignorado"}), 200
 
     try:
         cnpj = str(payload.get('cnpj', '')).replace('.', '').replace('/', '').replace('-', '').strip()
         config = CONFIG_EMPRESAS.get(cnpj)
-
-        if not config:
-            logger.warning(f"CNPJ {cnpj} não configurado no painel.")
-            return jsonify({"status": "cnpj_desconhecido"}), 200
+        if not config: return jsonify({"status": "cnpj_desconhecido"}), 200
 
         dados_webhook = payload.get('dados', {})
         id_pedido = dados_webhook.get('id')
@@ -101,11 +117,9 @@ def webhook_tiny():
         arquivo_destino = config['arquivo']
         pedidos = carregar_dados(arquivo_destino)
         
-        # Filtro de situações para exibição
         situacoes_vivas = ["aberto", "aprovado", "preparando", "pronto", "separacao"]
         
         if any(x in status for x in situacoes_vivas):
-            # BUSCA DETALHES USANDO O TOKEN ESPECÍFICO DA EMPRESA
             detalhes = buscar_detalhes_tiny(id_pedido, config['token'])
             
             fuso = datetime.now() - timedelta(hours=3)
@@ -123,9 +137,7 @@ def webhook_tiny():
                 "valor": valor_f,
                 "produtos": detalhes['produtos'] if detalhes else "Consultando itens..."
             })
-            logger.info(f"Pedido {numero} ({config['slug']}) processado.")
         else:
-            # Remove se sair do fluxo (cancelado ou faturado)
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
 
         salvar_dados(pedidos, arquivo_destino)
