@@ -2,198 +2,200 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Expedição Unificada - Trello Style</title>
+    <title>Painel de Controle - Expedição Unificada</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* FUNDO ESTILO TRELLO */
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary-eracks: #0284c7; /* Azul Profissional */
+            --primary-f2: #e11d48;     /* Vermelho Elegante */
+            --primary-agro: #16a34a;   /* Verde Sóbrio */
+            --border-color: #e2e8f0;
+        }
+
         body { 
-            background-color: #0079bf; 
-            color: #172b4d; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            height: 100vh;
-            overflow-x: auto;
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            font-family: 'Inter', -apple-system, sans-serif;
+            letter-spacing: -0.01em;
         }
 
-        .header-trello {
-            background-color: rgba(0,0,0,0.2);
-            color: white;
-            padding: 10px 20px;
-            font-weight: 800;
-            font-size: 1.3rem;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .trello-board {
-            display: flex;
-            padding: 10px;
-            gap: 15px;
-            align-items: flex-start;
-        }
-
-        .trello-list {
-            background-color: #ebecf0;
-            width: 380px;
-            min-width: 320px;
-            border-radius: 10px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .list-header {
-            padding: 5px 10px 10px 10px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: #172b4d;
+        .navbar-top {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 30px;
         }
 
-        /* CONFIGURAÇÃO DE CORES POR EMPRESA */
-        .color-bar { height: 6px; border-radius: 3px; margin-bottom: 10px; }
-        
-        /* ERACKS -> AZUL */
-        .bar-eracks { background-color: #0079bf; }
-        .badge-eracks { background-color: #0079bf; color: white; }
+        .column-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-        /* F2 -> VERMELHO */
-        .bar-f2 { background-color: #eb5a46; }
-        .badge-f2 { background-color: #eb5a46; color: white; }
+        .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; }
 
-        /* AGRO -> VERDE */
-        .bar-agro { background-color: #61bd4f; }
-        .badge-agro { background-color: #61bd4f; color: white; }
-
-        /* CARD */
+        /* CARD PROFISSIONAL */
         .card-pedido {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(9,30,66,.25);
-            border: none;
-            transition: transform 0.1s;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .card-pedido:hover { background-color: #f4f5f7; transform: translateY(-2px); }
+        .card-pedido:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* IDENTIFICAÇÃO DA EMPRESA NO CARD */
+        .line-eracks { border-top: 4px solid var(--primary-eracks); }
+        .line-f2 { border-top: 4px solid var(--primary-f2); }
+        .line-agro { border-top: 4px solid var(--primary-agro); }
 
         .mkt-tag {
-            background-color: #dfe1e6;
-            color: #44546f;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
-        }
-
-        .cliente-nome {
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin: 8px 0;
-            color: #172b4d;
+            color: var(--text-muted);
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 6px;
             text-transform: uppercase;
         }
 
-        .status-badge {
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 4px;
+        .pedido-numero { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+
+        .cliente-nome {
+            font-size: 1.15rem;
             font-weight: 700;
+            margin: 10px 0 5px 0;
+            color: var(--text-main);
         }
 
-        .produtos-box {
+        .status-pill {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .status-aberto { background: #fef3c7; color: #92400e; } /* Amarelo Sutil */
+
+        .produtos-container {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
             font-size: 0.9rem;
-            color: #172b4d;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #f9fafb;
-            border-radius: 5px;
-            border-left: 3px solid #dfe1e6;
+            border: 1px solid #f1f5f9;
         }
 
-        .valor { color: #1e8449; font-weight: 800; font-size: 1.1rem; }
+        .valor { font-size: 1.25rem; font-weight: 800; color: var(--text-main); }
         
-        .cronometro {
-            font-size: 0.8rem;
-            color: #626f86;
-            background-color: #ebecf0;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: 700;
+        .timer {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
+
+        .alert-time { color: #e11d48 !important; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="header-trello">
-        📦 EXPEDIÇÃO UNIFICADA
-    </div>
+    <nav class="navbar-top">
+        <div class="fw-bold"><i class="fa-solid fa-layer-group me-2"></i> EXPEDIÇÃO LIVE</div>
+        <div id="clock" class="text-muted small fw-bold"></div>
+    </nav>
 
-    <div class="trello-board">
-        
-        <div class="trello-list">
-            <div class="color-bar bar-eracks"></div>
-            <div class="list-header">ERACKS <span>{{ eracks|length }}</span></div>
-            {% for pedido in eracks %}
-            <div class="card-pedido">
-                <div class="d-flex justify-content-between">
-                    <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                    <span class="fw-bold text-muted small">#{{ pedido.numero }}</span>
+    <div class="container-fluid px-4">
+        <div class="row">
+            
+            <div class="col-md-4">
+                <div class="column-title"><span class="dot" style="background: var(--primary-eracks)"></span> ERACKS ({{ eracks|length }})</div>
+                {% for pedido in eracks %}
+                <div class="card-pedido line-eracks">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                        <span class="pedido-numero">#{{ pedido.numero }}</span>
+                    </div>
+                    <div class="cliente-nome">{{ pedido.cliente }}</div>
+                    <div class="status-pill status-aberto">{{ pedido.situacao }}</div>
+                    <div class="produtos-container">
+                        {{ pedido.produtos | safe }}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="valor">{{ pedido.valor }}</div>
+                        <div class="timer cronometro" data-chegada="{{ pedido.chegada }}"></div>
+                    </div>
                 </div>
-                <div class="cliente-nome">{{ pedido.cliente }}</div>
-                <div class="mb-2"><span class="status-badge badge-eracks">{{ pedido.situacao }}</span></div>
-                <div class="produtos-box">{{ pedido.produtos | safe }}</div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="valor">{{ pedido.valor }}</span>
-                    <span class="cronometro" data-chegada="{{ pedido.chegada }}">...</span>
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
 
-        <div class="trello-list">
-            <div class="color-bar bar-f2"></div>
-            <div class="list-header">F2 <span>{{ f2|length }}</span></div>
-            {% for pedido in f2 %}
-            <div class="card-pedido">
-                <div class="d-flex justify-content-between">
-                    <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                    <span class="fw-bold text-muted small">#{{ pedido.numero }}</span>
+            <div class="col-md-4">
+                <div class="column-title"><span class="dot" style="background: var(--primary-f2)"></span> F2 ({{ f2|length }})</div>
+                {% for pedido in f2 %}
+                <div class="card-pedido line-f2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                        <span class="pedido-numero">#{{ pedido.numero }}</span>
+                    </div>
+                    <div class="cliente-nome">{{ pedido.cliente }}</div>
+                    <div class="status-pill status-aberto">{{ pedido.situacao }}</div>
+                    <div class="produtos-container">
+                        {{ pedido.produtos | safe }}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="valor">{{ pedido.valor }}</div>
+                        <div class="timer cronometro" data-chegada="{{ pedido.chegada }}"></div>
+                    </div>
                 </div>
-                <div class="cliente-nome">{{ pedido.cliente }}</div>
-                <div class="mb-2"><span class="status-badge badge-f2">{{ pedido.situacao }}</span></div>
-                <div class="produtos-box">{{ pedido.produtos | safe }}</div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="valor">{{ pedido.valor }}</span>
-                    <span class="cronometro" data-chegada="{{ pedido.chegada }}">...</span>
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
 
-        <div class="trello-list">
-            <div class="color-bar bar-agro"></div>
-            <div class="list-header">AGRO <span>{{ agrosensores|length }}</span></div>
-            {% for pedido in agrosensores %}
-            <div class="card-pedido">
-                <div class="d-flex justify-content-between">
-                    <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                    <span class="fw-bold text-muted small">#{{ pedido.numero }}</span>
+            <div class="col-md-4">
+                <div class="column-title"><span class="dot" style="background: var(--primary-agro)"></span> AGROSENSORES ({{ agrosensores|length }})</div>
+                {% for pedido in agrosensores %}
+                <div class="card-pedido line-agro">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                        <span class="pedido-numero">#{{ pedido.numero }}</span>
+                    </div>
+                    <div class="cliente-nome">{{ pedido.cliente }}</div>
+                    <div class="status-pill status-aberto">{{ pedido.situacao }}</div>
+                    <div class="produtos-container">
+                        {{ pedido.produtos | safe }}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="valor">{{ pedido.valor }}</div>
+                        <div class="timer cronometro" data-chegada="{{ pedido.chegada }}"></div>
+                    </div>
                 </div>
-                <div class="cliente-nome">{{ pedido.cliente }}</div>
-                <div class="mb-2"><span class="status-badge badge-agro">{{ pedido.situacao }}</span></div>
-                <div class="produtos-box">{{ pedido.produtos | safe }}</div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="valor">{{ pedido.valor }}</span>
-                    <span class="cronometro" data-chegada="{{ pedido.chegada }}">...</span>
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
 
+        </div>
     </div>
 
     <audio id="alertaSonoro"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg"></audio>
@@ -203,22 +205,36 @@
             document.querySelectorAll('.cronometro').forEach(el => {
                 const chegada = new Date(el.getAttribute('data-chegada'));
                 const diffMin = Math.floor((new Date() - chegada) / 60000);
-                if (diffMin < 1) el.innerText = "⏱ Agora";
-                else if (diffMin < 60) el.innerText = "⏱ " + diffMin + "m";
-                else el.innerText = "⏱ " + Math.floor(diffMin/60) + "h " + (diffMin%60) + "m";
                 
-                if (diffMin >= 30) { el.style.backgroundColor = "#eb5a46"; el.style.color = "white"; }
+                let texto = diffMin < 1 ? "AGORA" : diffMin + " MIN";
+                if (diffMin >= 60) texto = Math.floor(diffMin/60) + "H " + (diffMin%60) + "M";
+                
+                el.innerHTML = `<i class="fa-regular fa-clock"></i> ${texto}`;
+                
+                if (diffMin >= 30) el.classList.add('alert-time');
+                else el.classList.remove('alert-time');
             });
         }
-        setInterval(atualizarCronometros, 10000); 
+
+        function clock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('pt-BR');
+        }
+
+        setInterval(atualizarCronometros, 10000);
+        setInterval(clock, 1000);
         atualizarCronometros();
+        clock();
+
+        // Reload para novos dados
         setTimeout(() => { window.location.reload(); }, 60000);
 
-        const totalAtual = document.querySelectorAll('.card-pedido').length;
-        if (totalAtual > (localStorage.getItem('totalPedidos') || 0)) {
-            document.getElementById('alertaSonoro').play().catch(e => {});
+        // Som de Alerta
+        const total = document.querySelectorAll('.card-pedido').length;
+        if (total > (localStorage.getItem('total_v4') || 0)) {
+            document.getElementById('alertaSonoro').play().catch(() => {});
         }
-        localStorage.setItem('totalPedidos', totalAtual);
+        localStorage.setItem('total_v4', total);
     </script>
 </body>
 </html>
