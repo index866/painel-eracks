@@ -38,22 +38,28 @@ def webhook_tiny():
         dados_pedido = info.get('pedido', info)
         numero = str(dados_pedido.get('numero') or info.get('numero', ''))
         
-        # Captura do Valor
+        # 1. Tratamento do E-commerce (Blindagem contra vazio)
+        # Tenta pegar de várias formas e remove espaços
+        ecommerce_raw = dados_pedido.get('nomeEcommerce') or info.get('nomeEcommerce')
+        if ecommerce_raw and str(ecommerce_raw).strip():
+            ecommerce = str(ecommerce_raw).strip()
+        else:
+            ecommerce = "Venda Direta"
+
+        # 2. Tratamento do Valor
         valor_bruto = (
             dados_pedido.get('total') or 
             dados_pedido.get('valor') or 
             info.get('total') or 0.00
         )
-        
         try:
             valor_num = float(valor_bruto)
             valor_formatado = f"R$ {valor_num:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
         except:
+            valor_num = 0
             valor_formatado = "R$ 0,00"
 
-        ecommerce = (dados_pedido.get('nomeEcommerce') or info.get('nomeEcommerce', 'Venda Direta')).strip()
-        
-        # Status vindo do Tiny
+        # 3. Tratamento do Status (Apenas "Em Aberto")
         status_bruto = str(dados_pedido.get('descricaoSituacao') or info.get('descricaoSituacao') or '').lower()
         
         cliente_obj = dados_pedido.get('cliente') or info.get('cliente', {})
@@ -64,8 +70,7 @@ def webhook_tiny():
 
         pedidos = carregar_pedidos()
 
-        # NOVA LÓGICA DE FILTRO:
-        # Só entra na tela se o status contiver "aberto"
+        # REGRA: Só fica na tela se o status for "Em Aberto"
         if "aberto" in status_bruto:
             fuso_brasil = datetime.now() - timedelta(hours=3)
             agora = fuso_brasil.strftime('%H:%M')
@@ -73,13 +78,17 @@ def webhook_tiny():
             encontrado = False
             for p in pedidos:
                 if str(p.get('numero')) == numero:
-                    p['situacao'] = status_bruna_upper = status_bruto.upper()
+                    p['situacao'] = status_bruto.upper()
                     p['cliente_exibicao'] = nome_cliente
-                    p['ecommerce'] = ecommerce
-                    # Preserva o valor caso o webhook de atualização venha zerado
+                    p['ultima_atualizacao'] = agora
+                    
+                    # Só atualiza e-commerce e valor se eles não vierem vazios do Tiny
+                    if ecommerce != "Venda Direta" or p.get('ecommerce') is None:
+                        p['ecommerce'] = ecommerce
+                    
                     if valor_num > 0:
                         p['valor'] = valor_formatado
-                    p['ultima_atualizacao'] = agora
+                    
                     encontrado = True
                     break
             
@@ -93,9 +102,9 @@ def webhook_tiny():
                     "ultima_atualizacao": agora
                 })
         else:
-            # Se o status for QUALQUER OUTRO (Pronto para envio, Faturado, etc), removemos da lista
+            # Se mudar para qualquer outro status (ex: "Pronto para envio"), remove da tela
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
-            print(f"--- Pedido {numero} REMOVIDO (Status: {status_bruto})")
+            print(f"--- Pedido {numero} REMOVIDO por status: {status_bruto}")
 
         salvar_pedidos(pedidos)
         return jsonify({"status": "success"}), 200
@@ -106,7 +115,7 @@ def webhook_tiny():
 
 @app.route('/ping')
 def ping():
-    return "Acordado!", 200
+    return "OK", 200
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
