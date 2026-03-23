@@ -2,159 +2,73 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Pedidos - Live</title>
+    <title>EXPEDIÇÃO UNIFICADA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <style>
-        body { background-color: #f4f7f6; color: #333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .column { min-height: 100vh; padding: 20px; border-right: 1px solid #e0e0e0; }
-        
-        /* Títulos das Colunas */
-        h2 { 
-            text-align: center; 
-            font-weight: 800; 
-            padding-bottom: 15px; 
-            margin-bottom: 25px; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .col-eracks h2 { color: #d32f2f; border-bottom: 4px solid #d32f2f; }
-        .col-f2 { background-color: #fdfdfd; }
-        .col-f2 h2 { color: #1976d2; border-bottom: 4px solid #1976d2; }
-        .col-agro h2 { color: #388e3c; border-bottom: 4px solid #388e3c; }
+        body { background-color: #d1d8e0; color: #2f3640; font-family: 'Segoe UI', sans-serif; }
+        .header-painel { background-color: #2f3640; color: #f5f6fa; padding: 10px; text-align: center; font-weight: 900; text-transform: uppercase; box-shadow: 0 4px 5px rgba(0,0,0,0.2); margin-bottom: 20px; }
+        .column { min-height: 100vh; padding: 15px; border-right: 1px solid #b2bec3; }
+        h2 { text-align: center; font-weight: 900; padding: 8px; border-radius: 4px; color: white; margin-bottom: 20px; }
+        .col-eracks h2 { background-color: #c23616; }
+        .col-f2 h2 { background-color: #0097e6; }
+        .col-agro h2 { background-color: #44bd32; }
 
-        /* Estilo do Card */
-        .card-pedido { 
-            background-color: #ffffff; 
-            border: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px; 
-            border-radius: 12px;
-            border-left: 6px solid #ffa000;
-            transition: all 0.3s ease;
-        }
-        .card-pedido:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
-
-        /* Detalhes Internos */
-        .mkt-tag { 
-            background-color: #e3f2fd; 
-            color: #1976d2; 
-            padding: 4px 10px; 
-            border-radius: 6px; 
-            font-size: 0.75rem; 
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .cliente-nome { font-size: 1.05rem; font-weight: 600; color: #2c3e50; }
-        .status-badge { font-size: 0.7rem; font-weight: bold; }
-        .valor { color: #2e7d32; font-weight: 800; font-size: 1.2rem; }
-        
-        .produtos-box { 
-            font-size: 0.9rem; 
-            color: #555; 
-            background-color: #f9f9f9; 
-            padding: 10px; 
-            border-radius: 8px;
-            margin: 10px 0;
-            line-height: 1.4;
-        }
-        
-        small.time { color: #999; font-weight: 500; }
+        .card-pedido { background-color: #fff; border: 2px solid #2f3640; margin-bottom: 15px; border-radius: 10px; box-shadow: 4px 4px 0px #2f3640; border-left: 8px solid #f1c40f; }
+        .mkt-tag { background-color: #2f3640; color: #f1c40f; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 800; }
+        .cliente-nome { font-size: 1.1rem; font-weight: 700; color: #000; }
+        .produtos-box { font-size: 0.95rem; background-color: #f1f2f6; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px dashed #7f8c8d; }
+        .valor { color: #1e8449; font-weight: 900; font-size: 1.3rem; }
+        .time-box { font-weight: bold; font-size: 0.85rem; color: #636e72; padding: 2px 6px; background: #eee; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-4 column col-eracks">
-                <h2>ERACKS</h2>
-                {% for pedido in eracks %}
-                <div class="card card-pedido p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <span class="fw-bold text-secondary">#{{ pedido.numero }}</span>
-                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                    </div>
-                    <div class="mt-2">
-                        <div class="cliente-nome">{{ pedido.cliente }}</div>
-                        <span class="badge rounded-pill bg-warning text-dark status-badge">{{ pedido.situacao }}</span>
-                    </div>
-                    <div class="produtos-box">
-                        {{ pedido.produtos | safe }}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="valor">{{ pedido.valor }}</span>
-                        <small class="time">{{ pedido.ultima_atualizacao }}</small>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+<div class="header-painel"><h1>Monitor de Expedição Unificada</h1></div>
 
-            <div class="col-md-4 column col-f2">
-                <h2>F2</h2>
-                {% for pedido in f2 %}
-                <div class="card card-pedido p-3" style="border-left-color: #1976d2;">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <span class="fw-bold text-secondary">#{{ pedido.numero }}</span>
-                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                    </div>
-                    <div class="mt-2">
-                        <div class="cliente-nome">{{ pedido.cliente }}</div>
-                        <span class="badge rounded-pill bg-primary status-badge">{{ pedido.situacao }}</span>
-                    </div>
-                    <div class="produtos-box">
-                        {{ pedido.produtos | safe }}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="valor">{{ pedido.valor }}</span>
-                        <small class="time">{{ pedido.ultima_atualizacao }}</small>
-                    </div>
-                </div>
-                {% endfor %}
+<div class="container-fluid"><div class="row">
+    {% for empresa, lista, cor in [('ERACKS', eracks, 'eracks'), ('F2', f2, 'f2'), ('AGRO', agrosensores, 'agro')] %}
+    <div class="col-md-4 column col-{{cor}}">
+        <h2>{{empresa}}</h2>
+        {% for pedido in lista %}
+        <div class="card card-pedido p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-muted">#{{ pedido.numero }}</span>
+                <span class="mkt-tag">{{ pedido.ecommerce }}</span>
             </div>
-
-            <div class="col-md-4 column col-agro">
-                <h2>AGRO</h2>
-                {% for pedido in agrosensores %}
-                <div class="card card-pedido p-3" style="border-left-color: #388e3c;">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <span class="fw-bold text-secondary">#{{ pedido.numero }}</span>
-                        <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-                    </div>
-                    <div class="mt-2">
-                        <div class="cliente-nome">{{ pedido.cliente }}</div>
-                        <span class="badge rounded-pill bg-success status-badge">{{ pedido.situacao }}</span>
-                    </div>
-                    <div class="produtos-box">
-                        {{ pedido.produtos | safe }}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="valor">{{ pedido.valor }}</span>
-                        <small class="time">{{ pedido.ultima_atualizacao }}</small>
-                    </div>
-                </div>
-                {% endfor %}
+            <div class="mt-2">
+                <div class="cliente-nome">{{ pedido.cliente }}</div>
+                <span class="badge bg-warning text-dark border border-dark">{{ pedido.situacao }}</span>
+            </div>
+            <div class="produtos-box">{{ pedido.produtos | safe }}</div>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="valor">{{ pedido.valor }}</span>
+                <span class="time-box cronometro" data-chegada="{{ pedido.chegada }}">Calculando...</span>
             </div>
         </div>
+        {% endfor %}
     </div>
+    {% endfor %}
+</div></div>
 
-    <audio id="alertaSonoro">
-        <source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg">
-    </audio>
+<audio id="alertaSonoro"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg"></audio>
 
-    <script>
-        // Atualiza a cada 30 segundos
-        setTimeout(function(){ window.location.reload(); }, 30000);
+<script>
+    function atualizarCronometros() {
+        document.querySelectorAll('.cronometro').forEach(el => {
+            const chegada = new Date(el.getAttribute('data-chegada'));
+            const diffMin = Math.floor((new Date() - chegada) / 60000);
+            if (diffMin < 1) el.innerText = "⏱ Agora";
+            else if (diffMin < 60) el.innerText = "⏱ Há " + diffMin + " min";
+            else el.innerText = "⏱ Há " + Math.floor(diffMin/60) + "h " + (diffMin%60) + "m";
+            if (diffMin >= 30) { el.style.color = "#d32f2f"; el.style.fontWeight = "900"; }
+        });
+    }
+    setInterval(atualizarCronometros, 10000); atualizarCronometros();
+    setTimeout(() => { window.location.reload(); }, 60000);
 
-        const totalAtual = document.querySelectorAll('.card-pedido').length;
-        const totalAntigo = localStorage.getItem('totalPedidos') || 0;
-
-        if (totalAtual > totalAntigo) {
-            const playPromise = document.getElementById('alertaSonoro').play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => { console.log("Som bloqueado pelo navegador. Clique na página."); });
-            }
-        }
-        localStorage.setItem('totalPedidos', totalAtual);
-    </script>
+    const totalAtual = document.querySelectorAll('.card-pedido').length;
+    if (totalAtual > (localStorage.getItem('total') || 0)) document.getElementById('alertaSonoro').play().catch(() => {});
+    localStorage.setItem('total', totalAtual);
+</script>
 </body>
 </html>
