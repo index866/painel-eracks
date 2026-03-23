@@ -89,5 +89,6 @@ def webhook_tiny():
         return jsonify({"status": "error"}), 200
 
 if __name__ == '__main__':
+    # O Render define a variável de ambiente PORT automaticamente
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
