@@ -32,11 +32,25 @@ def webhook_tiny():
         if not payload:
             return jsonify({"status": "vazio"}), 200
 
+        # Mostra o que chegou no log do Render para podermos depurar se necessário
+        print(f"DEBUG PAYLOAD: {payload}")
+
         info = payload.get('dados', payload)
-        numero = str(info.get('numero', ''))
         
-        # Tenta capturar o valor de múltiplas chaves comuns no Tiny
-        valor_bruto = info.get('total') or info.get('valor') or info.get('valor_total') or info.get('total_pedido') or 0.00
+        # Se os dados vierem dentro de uma chave 'pedido' (comum no Tiny)
+        dados_pedido = info.get('pedido', info)
+        
+        numero = str(dados_pedido.get('numero') or info.get('numero', ''))
+        
+        # Tenta capturar o valor de forma "agressiva" em várias chaves
+        valor_bruto = (
+            dados_pedido.get('total') or 
+            dados_pedido.get('valor') or 
+            dados_pedido.get('valor_total') or 
+            info.get('total') or 
+            info.get('valor') or 
+            0.00
+        )
         
         try:
             valor_num = float(valor_bruto)
@@ -44,17 +58,17 @@ def webhook_tiny():
         except:
             valor_formatado = "R$ 0,00"
 
-        ecommerce = info.get('nomeEcommerce', '').strip()
+        ecommerce = (dados_pedido.get('nomeEcommerce') or info.get('nomeEcommerce', '')).strip()
         if not ecommerce:
             ecommerce = "Venda Direta"
             
-        status_bruto = str(info.get('descricaoSituacao') or info.get('codigoSituacao') or '').lower()
+        status_bruto = str(dados_pedido.get('descricaoSituacao') or dados_pedido.get('codigoSituacao') or info.get('codigoSituacao') or '').lower()
         
-        cliente_obj = info.get('cliente', {})
+        cliente_obj = dados_pedido.get('cliente') or info.get('cliente', {})
         nome_cliente = cliente_obj.get('nome', 'Cliente não identificado') if isinstance(cliente_obj, dict) else str(cliente_obj)
 
-        if not numero:
-            return jsonify({"status": "error"}), 200
+        if not numero or numero == 'None':
+            return jsonify({"status": "error", "msg": "Sem numero"}), 200
 
         pedidos = carregar_pedidos()
         remover = ['cancelado', 'faturado', 'despachado', 'entregue', 'atendido']
@@ -90,8 +104,13 @@ def webhook_tiny():
         return jsonify({"status": "success"}), 200
 
     except Exception as e:
-        print(f"ERRO: {e}")
+        print(f"ERRO NO PROCESSAMENTO: {e}")
         return jsonify({"status": "error"}), 200
+
+# Rota para o Cron-job não precisar carregar o index pesado
+@app.route('/ping')
+def ping():
+    return "Acordado!", 200
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
