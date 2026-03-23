@@ -2,73 +2,223 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>EXPEDIÇÃO UNIFICADA</title>
+    <title>Expedição Unificada - Trello Style</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <style>
-        body { background-color: #d1d8e0; color: #2f3640; font-family: 'Segoe UI', sans-serif; }
-        .header-painel { background-color: #2f3640; color: #f5f6fa; padding: 10px; text-align: center; font-weight: 900; text-transform: uppercase; box-shadow: 0 4px 5px rgba(0,0,0,0.2); margin-bottom: 20px; }
-        .column { min-height: 100vh; padding: 15px; border-right: 1px solid #b2bec3; }
-        h2 { text-align: center; font-weight: 900; padding: 8px; border-radius: 4px; color: white; margin-bottom: 20px; }
-        .col-eracks h2 { background-color: #c23616; }
-        .col-f2 h2 { background-color: #0097e6; }
-        .col-agro h2 { background-color: #44bd32; }
+        /* FUNDO ESTILO TRELLO */
+        body { 
+            background-color: #0079bf; 
+            color: #172b4d; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            overflow-x: auto;
+        }
 
-        .card-pedido { background-color: #fff; border: 2px solid #2f3640; margin-bottom: 15px; border-radius: 10px; box-shadow: 4px 4px 0px #2f3640; border-left: 8px solid #f1c40f; }
-        .mkt-tag { background-color: #2f3640; color: #f1c40f; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 800; }
-        .cliente-nome { font-size: 1.1rem; font-weight: 700; color: #000; }
-        .produtos-box { font-size: 0.95rem; background-color: #f1f2f6; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px dashed #7f8c8d; }
-        .valor { color: #1e8449; font-weight: 900; font-size: 1.3rem; }
-        .time-box { font-weight: bold; font-size: 0.85rem; color: #636e72; padding: 2px 6px; background: #eee; border-radius: 4px; }
+        .header-trello {
+            background-color: rgba(0,0,0,0.2);
+            color: white;
+            padding: 10px 20px;
+            font-weight: 800;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .trello-board {
+            display: flex;
+            padding: 10px;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .trello-list {
+            background-color: #ebecf0;
+            width: 380px;
+            min-width: 320px;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .list-header {
+            padding: 5px 10px 10px 10px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #172b4d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* CONFIGURAÇÃO DE CORES POR EMPRESA */
+        .color-bar { height: 6px; border-radius: 3px; margin-bottom: 10px; }
+        
+        /* ERACKS -> AZUL */
+        .bar-eracks { background-color: #0079bf; }
+        .badge-eracks { background-color: #0079bf; color: white; }
+
+        /* F2 -> VERMELHO */
+        .bar-f2 { background-color: #eb5a46; }
+        .badge-f2 { background-color: #eb5a46; color: white; }
+
+        /* AGRO -> VERDE */
+        .bar-agro { background-color: #61bd4f; }
+        .badge-agro { background-color: #61bd4f; color: white; }
+
+        /* CARD */
+        .card-pedido {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(9,30,66,.25);
+            border: none;
+            transition: transform 0.1s;
+        }
+        .card-pedido:hover { background-color: #f4f5f7; transform: translateY(-2px); }
+
+        .mkt-tag {
+            background-color: #dfe1e6;
+            color: #44546f;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .cliente-nome {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 8px 0;
+            color: #172b4d;
+            text-transform: uppercase;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .produtos-box {
+            font-size: 0.9rem;
+            color: #172b4d;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9fafb;
+            border-radius: 5px;
+            border-left: 3px solid #dfe1e6;
+        }
+
+        .valor { color: #1e8449; font-weight: 800; font-size: 1.1rem; }
+        
+        .cronometro {
+            font-size: 0.8rem;
+            color: #626f86;
+            background-color: #ebecf0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
 
-<div class="header-painel"><h1>Monitor de Expedição Unificada</h1></div>
-
-<div class="container-fluid"><div class="row">
-    {% for empresa, lista, cor in [('ERACKS', eracks, 'eracks'), ('F2', f2, 'f2'), ('AGRO', agrosensores, 'agro')] %}
-    <div class="col-md-4 column col-{{cor}}">
-        <h2>{{empresa}}</h2>
-        {% for pedido in lista %}
-        <div class="card card-pedido p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="fw-bold text-muted">#{{ pedido.numero }}</span>
-                <span class="mkt-tag">{{ pedido.ecommerce }}</span>
-            </div>
-            <div class="mt-2">
-                <div class="cliente-nome">{{ pedido.cliente }}</div>
-                <span class="badge bg-warning text-dark border border-dark">{{ pedido.situacao }}</span>
-            </div>
-            <div class="produtos-box">{{ pedido.produtos | safe }}</div>
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="valor">{{ pedido.valor }}</span>
-                <span class="time-box cronometro" data-chegada="{{ pedido.chegada }}">Calculando...</span>
-            </div>
-        </div>
-        {% endfor %}
+    <div class="header-trello">
+        📦 EXPEDIÇÃO UNIFICADA
     </div>
-    {% endfor %}
-</div></div>
 
-<audio id="alertaSonoro"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg"></audio>
+    <div class="trello-board">
+        
+        <div class="trello-list">
+            <div class="color-bar bar-eracks"></div>
+            <div class="list-header">ERACKS <span>{{ eracks|length }}</span></div>
+            {% for pedido in eracks %}
+            <div class="card-pedido">
+                <div class="d-flex justify-content-between">
+                    <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                    <span class="fw-bold text-muted small">#{{ pedido.numero }}</span>
+                </div>
+                <div class="cliente-nome">{{ pedido.cliente }}</div>
+                <div class="mb-2"><span class="status-badge badge-eracks">{{ pedido.situacao }}</span></div>
+                <div class="produtos-box">{{ pedido.produtos | safe }}</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="valor">{{ pedido.valor }}</span>
+                    <span class="cronometro" data-chegada="{{ pedido.chegada }}">...</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
 
-<script>
-    function atualizarCronometros() {
-        document.querySelectorAll('.cronometro').forEach(el => {
-            const chegada = new Date(el.getAttribute('data-chegada'));
-            const diffMin = Math.floor((new Date() - chegada) / 60000);
-            if (diffMin < 1) el.innerText = "⏱ Agora";
-            else if (diffMin < 60) el.innerText = "⏱ Há " + diffMin + " min";
-            else el.innerText = "⏱ Há " + Math.floor(diffMin/60) + "h " + (diffMin%60) + "m";
-            if (diffMin >= 30) { el.style.color = "#d32f2f"; el.style.fontWeight = "900"; }
-        });
-    }
-    setInterval(atualizarCronometros, 10000); atualizarCronometros();
-    setTimeout(() => { window.location.reload(); }, 60000);
+        <div class="trello-list">
+            <div class="color-bar bar-f2"></div>
+            <div class="list-header">F2 <span>{{ f2|length }}</span></div>
+            {% for pedido in f2 %}
+            <div class="card-pedido">
+                <div class="d-flex justify-content-between">
+                    <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                    <span class="fw-bold text-muted small">#{{ pedido.numero }}</span>
+                </div>
+                <div class="cliente-nome">{{ pedido.cliente }}</div>
+                <div class="mb-2"><span class="status-badge badge-f2">{{ pedido.situacao }}</span></div>
+                <div class="produtos-box">{{ pedido.produtos | safe }}</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="valor">{{ pedido.valor }}</span>
+                    <span class="cronometro" data-chegada="{{ pedido.chegada }}">...</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
 
-    const totalAtual = document.querySelectorAll('.card-pedido').length;
-    if (totalAtual > (localStorage.getItem('total') || 0)) document.getElementById('alertaSonoro').play().catch(() => {});
-    localStorage.setItem('total', totalAtual);
-</script>
+        <div class="trello-list">
+            <div class="color-bar bar-agro"></div>
+            <div class="list-header">AGRO <span>{{ agrosensores|length }}</span></div>
+            {% for pedido in agrosensores %}
+            <div class="card-pedido">
+                <div class="d-flex justify-content-between">
+                    <span class="mkt-tag">{{ pedido.ecommerce }}</span>
+                    <span class="fw-bold text-muted small">#{{ pedido.numero }}</span>
+                </div>
+                <div class="cliente-nome">{{ pedido.cliente }}</div>
+                <div class="mb-2"><span class="status-badge badge-agro">{{ pedido.situacao }}</span></div>
+                <div class="produtos-box">{{ pedido.produtos | safe }}</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="valor">{{ pedido.valor }}</span>
+                    <span class="cronometro" data-chegada="{{ pedido.chegada }}">...</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    <audio id="alertaSonoro"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg"></audio>
+
+    <script>
+        function atualizarCronometros() {
+            document.querySelectorAll('.cronometro').forEach(el => {
+                const chegada = new Date(el.getAttribute('data-chegada'));
+                const diffMin = Math.floor((new Date() - chegada) / 60000);
+                if (diffMin < 1) el.innerText = "⏱ Agora";
+                else if (diffMin < 60) el.innerText = "⏱ " + diffMin + "m";
+                else el.innerText = "⏱ " + Math.floor(diffMin/60) + "h " + (diffMin%60) + "m";
+                
+                if (diffMin >= 30) { el.style.backgroundColor = "#eb5a46"; el.style.color = "white"; }
+            });
+        }
+        setInterval(atualizarCronometros, 10000); 
+        atualizarCronometros();
+        setTimeout(() => { window.location.reload(); }, 60000);
+
+        const totalAtual = document.querySelectorAll('.card-pedido').length;
+        if (totalAtual > (localStorage.getItem('totalPedidos') || 0)) {
+            document.getElementById('alertaSonoro').play().catch(e => {});
+        }
+        localStorage.setItem('totalPedidos', totalAtual);
+    </script>
 </body>
 </html>
