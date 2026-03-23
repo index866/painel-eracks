@@ -5,15 +5,18 @@ import sys
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime, timedelta
 
-# Configuração de Log para aparecer no Render
-logging.basicConfig(stream=sys.stderr, level=logging.INFO, 
-                    format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(stream=sys.stderr, level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 ARQUIVOS = {"eracks": "pedidos_eracks.json", "f2": "pedidos_f2.json", "agrosensores": "pedidos_agro.json"}
 CONTAS = {"39544860000121": "eracks", "09653335000183": "f2", "07093835000182": "agrosensores"}
+
+# Rota para evitar erro 404 de sistemas de monitoramento (Ping)
+@app.route('/ping')
+def ping():
+    return "OK", 200
 
 def carregar_dados(slug):
     arquivo = ARQUIVOS.get(slug)
@@ -36,39 +39,41 @@ def index():
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
-    # Isso força o dado bruto a aparecer no Log do Render
+    # Se o Tiny enviar um teste vazio, respondemos OK para ele validar a URL
+    if not request.data:
+        return jsonify({"status": "conexao_ok"}), 200
+
     dados_brutos = request.get_data(as_text=True)
-    logger.info(f"DADOS DO TINY: {dados_brutos}")
+    logger.info(f"DADOS RECEBIDOS: {dados_brutos}")
 
     try:
         payload = request.get_json(silent=True) or request.form.to_dict()
-        if not payload: return jsonify({"status": "vazio"}), 200
-
         cnpj = str(payload.get('cnpj', '')).replace('.', '').replace('/', '').replace('-', '').strip()
         slug = CONTAS.get(cnpj)
 
         if not slug:
-            logger.warning(f"CNPJ {cnpj} nao reconhecido")
             return jsonify({"status": "cnpj_desconhecido"}), 200
 
-        # Navega no JSON do Tiny (pode vir como 'dados' ou direto)
         dados = payload.get('dados', payload)
         pedido = dados.get('pedido', dados)
         
         numero = str(pedido.get('numero') or dados.get('numero', ''))
         status = str(pedido.get('descricaoSituacao') or dados.get('descricaoSituacao') or '').lower()
 
-        if "aberto" in status or "aprovado" in status:
+        # Filtro de Situações (Adicionado 'faturado' e 'pronto_envio' para teste)
+        situacoes_validas = ["aberto", "aprovado", "preparando_envio", "faturado", "pronto_envio"]
+        
+        if any(x in status for x in situacoes_validas):
             pedidos = carregar_dados(slug)
             fuso = datetime.now() - timedelta(hours=3)
             
-            # Captura VALOR (tenta várias chaves comuns)
-            valor = pedido.get('total') or pedido.get('valor_total') or dados.get('total') or 0
+            # Valor (Na v3 o campo é 'total')
+            valor = pedido.get('total') or dados.get('total') or 0
             
-            # Captura ECOMMERCE
+            # Marketplace (Na v3 o campo é 'nome_ecommerce')
             mkt = (pedido.get('nome_ecommerce') or pedido.get('nomeEcommerce') or "Venda Direta").strip()
             
-            # Captura ITENS
+            # Itens (Apenas na v3)
             itens_lista = pedido.get('itens', [])
             produtos = []
             for i in itens_lista:
@@ -78,15 +83,10 @@ def webhook_tiny():
                 qtd = int(float(obj.get('quantidade', 1)))
                 produtos.append(f"{qtd}x [{sku}] {desc}")
             
-            prod_str = " | ".join(produtos) if produtos else "Itens nao enviados - Veja Config Tiny"
+            prod_str = " | ".join(produtos) if produtos else "Aguardando Itens (v3 necessário)"
 
-            # Formatação de Valor
-            try:
-                valor_f = f"R$ {float(valor):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-            except:
-                valor_f = f"R$ {valor}"
+            valor_f = f"R$ {float(valor):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
 
-            # Atualiza lista (evita duplicados)
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
             pedidos.append({
                 "numero": numero,
@@ -99,11 +99,15 @@ def webhook_tiny():
                 "produtos": prod_str
             })
             salvar_dados(pedidos, slug)
-            logger.info(f"Pedido {numero} salvo com sucesso!")
+        else:
+            # Se mudar para um status que não queremos, remove da tela
+            pedidos = carregar_dados(slug)
+            pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
+            salvar_dados(pedidos, slug)
         
         return jsonify({"status": "success"}), 200
     except Exception as e:
-        logger.error(f"Erro no processamento: {str(e)}")
+        logger.error(f"Erro: {str(e)}")
         return jsonify({"status": "error"}), 200
 
 if __name__ == '__main__':
