@@ -5,14 +5,14 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-# ARQUIVOS DE DADOS PARA CADA CONTA
+# ARQUIVOS DE DADOS
 ARQUIVOS = {
     "eracks": "pedidos_eracks.json",
     "f2": "pedidos_f2.json",
     "agrosensores": "pedidos_agro.json"
 }
 
-# CONFIGURAÇÃO DE CNPJs OFICIAIS
+# CONFIGURAÇÃO DE CNPJs
 CONTAS = {
     "39544860000121": "eracks",
     "09653335000183": "f2",
@@ -42,16 +42,20 @@ def index():
 
 @app.route('/webhook-tiny', methods=['POST'])
 def webhook_tiny():
+    # --- LINHA DE DEBUG: VEJA ISSO NOS LOGS DO RENDER ---
+    dados_brutos = request.get_data(as_text=True)
+    print(f"DEBUG TINY RECEBIDO: {dados_brutos}")
+    # ----------------------------------------------------
+
     try:
         payload = request.get_json(silent=True) or request.form.to_dict()
         if not payload: return jsonify({"status": "vazio"}), 200
 
-        # Identifica a conta e limpa o CNPJ
         cnpj_recebido = str(payload.get('cnpj', '')).replace('.', '').replace('/', '').replace('-', '').strip()
         slug_conta = CONTAS.get(cnpj_recebido)
 
         if not slug_conta:
-            print(f"Aviso: CNPJ {cnpj_recebido} não cadastrado.")
+            print(f"AVISO: CNPJ {cnpj_recebido} desconhecido.")
             return jsonify({"status": "cnpj_desconhecido"}), 200
 
         info = payload.get('dados', payload)
@@ -61,14 +65,15 @@ def webhook_tiny():
 
         pedidos = carregar_dados(slug_conta)
 
-        # Regra: Só exibe se estiver em aberto ou situações similares de início
+        # Aceita Aberto ou Aprovado (Pagamento confirmado)
         if "aberto" in status_bruto or "aprovado" in status_bruto:
             fuso = datetime.now() - timedelta(hours=3)
             agora_hora = fuso.strftime('%H:%M')
-            chegada_iso = fuso.isoformat() # Usado para o cronómetro no HTML
+            chegada_iso = fuso.isoformat()
             
+            # Captura o valor total
             valor_bruto = dados_pedido.get('total') or info.get('total') or 0
-            ecommerce = (dados_pedido.get('nomeEcommerce') or info.get('nomeEcommerce') or "Venda Direta").strip()
+            ecommerce = (dados_pedido.get('nome_ecommerce') or dados_pedido.get('nomeEcommerce') or "Venda Direta").strip()
             
             # Captura de Itens (Produtos e SKUs)
             itens_lista = dados_pedido.get('itens', [])
@@ -81,7 +86,6 @@ def webhook_tiny():
                 produtos_fmt.append(f"{qtd_prod}x [{sku_prod}] {nome_prod}")
             
             produtos_str = " | ".join(produtos_fmt)
-
             cliente_info = dados_pedido.get('cliente') or {}
             cliente = cliente_info.get('nome', 'Cliente') if isinstance(cliente_info, dict) else str(cliente_info)
 
@@ -91,7 +95,7 @@ def webhook_tiny():
                     p['situacao'] = status_bruto.upper()
                     p['ultima_atualizacao'] = agora_hora
                     p['produtos'] = produtos_str
-                    # Mantemos a 'chegada' original para o cronómetro não resetar
+                    p['valor'] = f"R$ {float(valor_bruto):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
                     encontrado = True
                     break
             
@@ -108,16 +112,15 @@ def webhook_tiny():
                     "produtos": produtos_str
                 })
         else:
-            # Remove o pedido se mudar para faturado, cancelado ou pronto para envio
+            # Remove se sair do fluxo de separação
             pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
 
         salvar_dados(pedidos, slug_conta)
         return jsonify({"status": "success"}), 200
     except Exception as e:
-        print(f"Erro no processamento do webhook: {e}")
+        print(f"ERRO: {e}")
         return jsonify({"status": "error"}), 200
 
 if __name__ == '__main__':
-    # Porta padrão para o Render ou local
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
