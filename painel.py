@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # =========================================================
-# CONFIGURAÇÃO MULTI-EMPRESA (TOKENS E ARQUIVOS)
+# CONFIGURAÇÃO MULTI-EMPRESA
 # =========================================================
 CONFIG_EMPRESAS = {
     "39544860000121": {
@@ -34,7 +34,6 @@ CONFIG_EMPRESAS = {
 }
 
 def buscar_estoque(sku, token):
-    """ Consulta o saldo atual do produto no Tiny """
     url = "https://api.tiny.com.br/api2/produto.obter.estoque.php"
     params = {'token': token, 'codigo': sku, 'formato': 'json'}
     try:
@@ -46,7 +45,6 @@ def buscar_estoque(sku, token):
         return 0
 
 def buscar_detalhes_tiny(id_pedido, token):
-    """ Busca Marketplace, Itens e Estoque """
     url = "https://api.tiny.com.br/api2/pedido.obter.php"
     params = {'token': token, 'id': id_pedido, 'formato': 'json'}
     try:
@@ -55,11 +53,8 @@ def buscar_detalhes_tiny(id_pedido, token):
         retorno = dados.get('retorno', {})
         if retorno.get('status') == 'OK':
             p = retorno.get('pedido', {})
-            
-            # Identificação do Marketplace
             mkt = (p.get('nome_ecommerce') or p.get('nome_omnichannel') or 
                    p.get('intermediador', {}).get('nome') or p.get('canal_venda') or "")
-            
             if not mkt:
                 venda_orig = str(p.get('id_venda_original', ''))
                 mkt = "MERCADO LIVRE" if "MLB" in venda_orig else "VENDA DIRETA"
@@ -70,12 +65,10 @@ def buscar_detalhes_tiny(id_pedido, token):
                 item = i.get('item', {})
                 sku, desc = item.get('codigo', 'S/SKU'), item.get('descricao', 'Produto')
                 qtd_pedida = int(float(item.get('quantidade', 1)))
-                
                 saldo_atual = buscar_estoque(sku, token)
                 cor = "#2e7d32" if saldo_atual >= qtd_pedida else "#d32f2f"
-                status = f'✅ Disp: {int(saldo_atual)}' if saldo_atual >= qtd_pedida else f'❌ FALTA: {int(saldo_atual)}'
-                
-                lista_prod.append(f"<b>{qtd_pedida}x</b> [{sku}] {desc}<br><span style='color:{cor};font-weight:bold;'>{status}</span>")
+                status_est = f'✅ Disp: {int(saldo_atual)}' if saldo_atual >= qtd_pedida else f'❌ FALTA: {int(saldo_atual)}'
+                lista_prod.append(f"<b>{qtd_pedida}x</b> [{sku}] {desc}<br><span style='color:{cor};font-weight:bold;'>{status_est}</span>")
             
             return {"valor": p.get('total_pedido', 0), "mkt": mkt.upper(), "produtos": "<br><br>".join(lista_prod)}
     except:
@@ -114,28 +107,29 @@ def webhook_tiny():
 
         pedidos = carregar_dados(config['arquivo'])
         
-        if any(x in status for x in ["aberto", "aprovado", "preparando", "pronto", "separacao"]):
+        # PASSO 1: Sempre remove o pedido da lista (para limpar se ele mudou de status)
+        pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
+
+        # PASSO 2: SÓ adiciona de volta se o status for EXATAMENTE "aberto"
+        if status == "aberto":
             detalhes = buscar_detalhes_tiny(id_pedido, config['token'])
             fuso = datetime.now() - timedelta(hours=3)
-            
             valor_f = f"R$ {float(detalhes['valor'] if detalhes else 0):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
 
-            pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
             pedidos.append({
                 "numero": numero,
                 "cliente": dados_webhook.get('cliente', {}).get('nome', 'Cliente'),
                 "ecommerce": detalhes['mkt'] if detalhes else "VENDA DIRETA",
-                "situacao": status.upper(),
-                "chegada": fuso.isoformat(), # IMPORTANTE PARA O CRONÔMETRO
+                "situacao": "ABERTO",
+                "chegada": fuso.isoformat(),
                 "valor": valor_f,
                 "produtos": detalhes['produtos'] if detalhes else "Consultando..."
             })
-        else:
-            pedidos = [p for p in pedidos if str(p.get('numero')) != numero]
 
         salvar_dados(pedidos, config['arquivo'])
         return jsonify({"status": "success"}), 200
-    except:
+    except Exception as e:
+        logger.error(f"Erro no webhook: {e}")
         return jsonify({"status": "error"}), 200
 
 if __name__ == '__main__':
