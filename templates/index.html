@@ -6,42 +6,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-page: #f8fafc;
-            --eracks-color: #0061ff;
-            --f2-color: #ff4b2b;
-            --agro-color: #2ecc71;
-            --text-dark: #1e293b;
-        }
-        body { background-color: var(--bg-page); font-family: 'Inter', sans-serif; color: var(--text-dark); padding: 20px; }
-        .header-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
-        
-        /* Layout Sugestões */
-        .area-sugestoes { display: flex; gap: 15px; margin-bottom: 30px; overflow-x: auto; padding-bottom: 10px; }
-        .col-sugestao { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 12px; padding: 12px; min-width: 250px; flex: 1; }
-        .col-sugestao h6 { font-size: 0.75rem; font-weight: 800; color: #c53030; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #fed7d7; padding-bottom: 5px; }
-        .item-sugestao { background: white; border: 1px solid #feb2b2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
-        .item-sugestao strong { color: #2d3748; }
-
-        .col-title { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; color: #64748b; }
-        .col-title span { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; }
-        
-        .card-pedido { background: #ffffff; border-radius: 14px; padding: 18px; margin-bottom: 18px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-left: 6px solid #e2e8f0; }
+        :root { --bg-page: #f8fafc; --eracks-color: #0061ff; --f2-color: #ff4b2b; --agro-color: #2ecc71; --text-dark: #1e293b; }
+        body { background-color: var(--bg-page); font-family: 'Inter', sans-serif; padding: 20px; }
+        .header-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .area-sugestoes { display: flex; gap: 15px; margin-bottom: 25px; overflow-x: auto; }
+        .col-sugestao { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 12px; padding: 12px; min-width: 220px; flex: 1; }
+        .col-sugestao h6 { font-size: 0.7rem; font-weight: 800; color: #c53030; margin-bottom: 8px; text-transform: uppercase; }
+        .item-sugestao { background: white; border: 1px solid #feb2b2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .card-pedido { background: #ffffff; border-radius: 14px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-left: 6px solid #e2e8f0; }
         .border-eracks { border-left-color: var(--eracks-color); }
         .border-f2 { border-left-color: var(--f2-color); }
         .border-agro { border-left-color: var(--agro-color); }
-
-        .mkt-label { font-size: 0.65rem; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
-        .cliente { font-size: 1.05rem; font-weight: 700; margin: 10px 0; display: block; color: #0f172a; }
-        .lista-produtos { background: #f8fafc; border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 0.88rem; border-left: 3px solid #dfe6e9; }
-        .valor-total { font-weight: 800; font-size: 1.15rem; }
-        .timer-badge { font-size: 0.75rem; font-weight: 700; color: #64748b; }
+        .cliente { font-size: 1rem; font-weight: 700; color: #0f172a; margin: 8px 0; display: block; }
+        .lista-produtos { background: #f8fafc; border-radius: 8px; padding: 10px; font-size: 0.85rem; border-left: 3px solid #dfe6e9; }
+        .mkt-label { font-size: 0.6rem; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
-
     <div class="header-main">
-        <h1>📦 EXPEDIÇÃO <span style="color: var(--eracks-color);">LIVE</span></h1>
+        <h3>📦 EXPEDIÇÃO <span style="color: var(--eracks-color);">LIVE</span></h3>
         <div id="relogio" class="fw-bold text-muted small"></div>
     </div>
 
@@ -49,12 +32,9 @@
         {% for empresa, itens in sugestoes.items() %}
         {% if itens %}
         <div class="col-sugestao">
-            <h6>⚠️ COMPRA: {{ empresa }}</h6>
+            <h6>⚠️ REPOSIÇÃO: {{ empresa }}</h6>
             {% for s in itens %}
-            <div class="item-sugestao">
-                <span><strong>{{ s.sku }}</strong></span>
-                <span class="badge bg-danger">{{ s.estoque }} un</span>
-            </div>
+            <div class="item-sugestao"><strong>{{ s.sku }}</strong> <span class="badge bg-danger">{{ s.estoque }}</span></div>
             {% endfor %}
         </div>
         {% endif %}
@@ -65,18 +45,15 @@
         <div class="row">
             {% for emp_nome, lista, cor, border in [('ERACKS', eracks, 'eracks', 'border-eracks'), ('F2', f2, 'f2', 'border-f2'), ('AGRO', agrosensores, 'agro', 'border-agro')] %}
             <div class="col-md-4">
-                <div class="col-title"><span style="background: var(--{{cor}}-color);"></span> {{emp_nome}} ({{ lista|length }})</div>
+                <div class="fw-bold text-muted mb-3 small">● {{emp_nome}} ({{ lista|length }})</div>
                 {% for p in lista %}
                 <div class="card-pedido {{border}}">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="mkt-label">{{ p.ecommerce }}</span>
-                        <span class="text-muted small">#{{ p.numero }}</span>
-                    </div>
+                    <div class="d-flex justify-content-between"><span class="mkt-label">{{ p.ecommerce }}</span><span class="text-muted small">#{{ p.numero }}</span></div>
                     <span class="cliente">{{ p.cliente }}</span>
                     <div class="lista-produtos">{{ p.produtos | safe }}</div>
-                    <div class="footer-card d-flex justify-content-between">
-                        <span class="valor-total">{{ p.valor }}</span>
-                        <span class="timer-badge crono" data-time="{{ p.chegada }}">-- min</span>
+                    <div class="d-flex justify-content-between mt-2 align-items-center">
+                        <span class="fw-bold">{{ p.valor }}</span>
+                        <span class="timer-badge crono small text-muted" data-time="{{ p.chegada }}">-- min</span>
                     </div>
                 </div>
                 {% endfor %}
@@ -84,8 +61,6 @@
             {% endfor %}
         </div>
     </div>
-
-    <audio id="alertaSonoro"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg"></audio>
 
     <script>
         function updateTime() {
@@ -98,9 +73,6 @@
         }
         setInterval(updateTime, 10000); updateTime();
         setTimeout(() => { window.location.reload(); }, 60000);
-        const count = document.querySelectorAll('.card-pedido').length;
-        if (count > (localStorage.getItem('last_count') || 0)) { document.getElementById('alertaSonoro').play().catch(() => {}); }
-        localStorage.setItem('last_count', count);
     </script>
 </body>
 </html>
