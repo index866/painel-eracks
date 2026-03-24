@@ -2,197 +2,102 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expedição Unificada</title>
+    <title>Painel de Expedição | Abertos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background-color: #f0f2f5; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 10px;
+        :root {
+            --bg-page: #f8fafc;
+            --eracks-color: #0061ff;
+            --f2-color: #ff4b2b;
+            --agro-color: #2ecc71;
+            --text-dark: #1e293b;
         }
 
-        /* BARRA SUPERIOR ESCURA */
-        .navbar-expedicao {
-            background-color: #1a2533;
-            border-radius: 10px;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .navbar-title { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
-        
-        /* BOTÃO ATIVAR SOM (LARANJA) */
-        .btn-ativar-som {
-            background-color: #ff9800;
-            border: none;
-            color: white;
-            padding: 6px 18px;
-            border-radius: 8px;
-            font-weight: 800;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        body { background-color: var(--bg-page); font-family: 'Inter', sans-serif; color: var(--text-dark); padding: 20px; }
+        .header-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        .header-main h1 { font-weight: 800; font-size: 1.4rem; letter-spacing: -0.5px; margin: 0; }
 
-        /* COLUNAS COM FUNDO CINZA AZULADO */
-        .col-expedicao {
-            background-color: #cbd5e0; /* Cor igual à da imagem */
-            border-radius: 12px;
-            padding: 15px;
-            min-height: 90vh;
-        }
+        .col-title { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 20px; display: flex; align-items: center; color: #64748b; }
+        .col-title span { width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; }
 
-        /* CABEÇALHOS DAS COLUNAS */
-        .header-col {
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .bg-eracks { background-color: #0056b3; } /* Azul da imagem */
-        .bg-f2 { background-color: #d32f2f; }     /* Vermelho da imagem */
-        .bg-agro { background-color: #1a9e52; }   /* Verde da imagem */
-
-        /* CARD DE PEDIDO (INTERNO) */
         .card-pedido {
-            background-color: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
+            background: #ffffff;
             border: none;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.05);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border-left: 6px solid #e2e8f0;
         }
 
-        .mkt-tag { font-size: 0.7rem; font-weight: 800; background: #edf2f7; color: #4a5568; padding: 2px 8px; border-radius: 4px; }
-        .cliente-nome { font-size: 1rem; font-weight: 700; color: #2d3748; margin-top: 5px; }
-        .valor { font-weight: 800; color: #2d3748; font-size: 1.1rem; }
-        .cronometro { font-size: 0.75rem; color: #718096; font-weight: 600; }
-        .atrasado { color: #e53e3e !important; }
-        .produtos-box { font-size: 0.85rem; background: #f8fafc; padding: 10px; border-radius: 6px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        .border-eracks { border-left-color: var(--eracks-color); }
+        .border-f2 { border-left-color: var(--f2-color); }
+        .border-agro { border-left-color: var(--agro-color); }
 
+        .mkt-label { font-size: 0.65rem; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+        .pedido-id { font-weight: 700; color: #94a3b8; font-size: 0.8rem; }
+        .cliente { font-size: 1.1rem; font-weight: 700; margin: 12px 0 5px 0; display: block; color: #0f172a; text-transform: uppercase; }
+        .status-tag { font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 6px; background: #fff3cd; color: #856404; display: inline-block; margin-bottom: 10px; }
+
+        .lista-produtos { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 15px; margin: 15px 0; font-size: 0.9rem; border-left: 3px solid #dfe6e9; }
+        .footer-card { display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #f1f5f9; }
+        .valor-total { font-weight: 800; font-size: 1.2rem; color: #0f172a; }
+        
+        .timer-badge { font-size: 0.8rem; font-weight: 700; color: #64748b; }
+        .atrasado { color: #e11d48 !important; animation: blink 2s infinite; }
+        @keyframes blink { 50% { opacity: 0.6; } }
     </style>
 </head>
 <body>
 
-    <div class="navbar-expedicao">
-        <div class="navbar-title">
-            📦 EXPEDIÇÃO UNIFICADA
-        </div>
-        <button class="btn-ativar-som" onclick="ativarSom()">
-            <i class="fa-solid fa-bell"></i> ATIVAR SOM
-        </button>
+    <div class="header-main">
+        <h1>📦 MONITOR DE PEDIDOS <span style="color: var(--eracks-color);">ABERTOS</span></h1>
+        <div id="relogio" class="fw-bold text-muted"></div>
     </div>
 
     <div class="container-fluid">
-        <div class="row g-3">
-            
+        <div class="row">
+            {% for empresa, lista, cor, border in [('ERACKS', eracks, 'eracks', 'border-eracks'), ('F2', f2, 'f2', 'border-f2'), ('AGRO', agrosensores, 'agro', 'border-agro')] %}
             <div class="col-md-4">
-                <div class="col-expedicao">
-                    <div class="header-col bg-eracks">ERACKS ({{ eracks|length }})</div>
-                    {% for p in eracks %}
-                    <div class="card-pedido">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="mkt-tag">{{ p.ecommerce }}</span>
-                            <span class="text-muted small fw-bold">#{{ p.numero }}</span>
-                        </div>
-                        <div class="cliente-nome">{{ p.cliente }}</div>
-                        <div class="produtos-box">{{ p.produtos | safe }}</div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="valor">{{ p.valor }}</span>
-                            <span class="cronometro crono" data-time="{{ p.chegada }}">--</span>
-                        </div>
+                <div class="col-title"><span style="background: var(--{{cor}}-color);"></span> {{empresa}} ({{ lista|length }})</div>
+                {% for p in lista %}
+                <div class="card-pedido {{border}}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="mkt-label">{{ p.ecommerce }}</span>
+                        <span class="pedido-id">#{{ p.numero }}</span>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="col-expedicao">
-                    <div class="header-col bg-f2">F2 DESIGN ({{ f2|length }})</div>
-                    {% for p in f2 %}
-                    <div class="card-pedido">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="mkt-tag">{{ p.ecommerce }}</span>
-                            <span class="text-muted small fw-bold">#{{ p.numero }}</span>
-                        </div>
-                        <div class="cliente-nome">{{ p.cliente }}</div>
-                        <div class="produtos-box">{{ p.produtos | safe }}</div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="valor">{{ p.valor }}</span>
-                            <span class="cronometro crono" data-time="{{ p.chegada }}">--</span>
-                        </div>
+                    <span class="cliente">{{ p.cliente }}</span>
+                    <span class="status-tag">STATUS: {{ p.situacao }}</span>
+                    <div class="lista-produtos">{{ p.produtos | safe }}</div>
+                    <div class="footer-card">
+                        <span class="valor-total">{{ p.valor }}</span>
+                        <span class="timer-badge crono" data-time="{{ p.chegada }}">-- min</span>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
-
-            <div class="col-md-4">
-                <div class="col-expedicao">
-                    <div class="header-col bg-agro">AGROSENSORES ({{ agrosensores|length }})</div>
-                    {% for p in agrosensores %}
-                    <div class="card-pedido">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="mkt-tag">{{ p.ecommerce }}</span>
-                            <span class="text-muted small fw-bold">#{{ p.numero }}</span>
-                        </div>
-                        <div class="cliente-nome">{{ p.cliente }}</div>
-                        <div class="produtos-box">{{ p.produtos | safe }}</div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="valor">{{ p.valor }}</span>
-                            <span class="cronometro crono" data-time="{{ p.chegada }}">--</span>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
+            {% endfor %}
         </div>
     </div>
 
-    <audio id="audioAlerta">
-        <source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="alertaSonoro"><source src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" type="audio/mpeg"></audio>
 
     <script>
-        function ativarSom() {
-            const btn = document.querySelector('.btn-ativar-som');
-            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> SOM ATIVADO';
-            btn.style.backgroundColor = '#4caf50';
-            // Play silencioso para "desbloquear" o áudio no navegador
-            document.getElementById('audioAlerta').play().catch(e => {});
-        }
-
-        function updateCrono() {
+        function updateTime() {
             document.querySelectorAll('.crono').forEach(el => {
                 const chegada = new Date(el.getAttribute('data-time'));
                 const diff = Math.floor((new Date() - chegada) / 60000);
-                el.innerText = diff < 1 ? "AGORA" : diff + " MIN";
+                el.innerText = diff < 1 ? "AGORA" : "HÁ " + diff + " MIN";
                 if (diff >= 30) el.classList.add('atrasado');
             });
+            document.getElementById('relogio').innerText = new Date().toLocaleTimeString();
         }
-
-        setInterval(updateCrono, 10000);
-        updateCrono();
+        setInterval(updateTime, 10000); updateTime();
         setTimeout(() => { window.location.reload(); }, 60000);
-
         const count = document.querySelectorAll('.card-pedido').length;
-        if (count > (localStorage.getItem('last_count_oper') || 0)) {
-            document.getElementById('audioAlerta').play().catch(e => {});
-        }
-        localStorage.setItem('last_count_oper', count);
+        if (count > (localStorage.getItem('last_count') || 0)) { document.getElementById('alertaSonoro').play().catch(() => {}); }
+        localStorage.setItem('last_count', count);
     </script>
 </body>
 </html>
