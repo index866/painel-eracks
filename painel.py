@@ -73,7 +73,7 @@ def buscar_detalhes_tiny(id_pedido, token):
                 
                 saldo_atual = buscar_estoque(sku, token)
                 cor = "#2e7d32" if saldo_atual >= qtd_pedida else "#d32f2f"
-                status = f'✅ Disp: {int(saldo_atual)}' if saldo_atual >= qtd_pedida else f'❌ FALTA: {int(saldo_atual)}'
+                status = f'✅ Disp: {int(saldo_atual)}' if saldo_atual >= qtd_pedida else f'❌ Estoque: {int(saldo_atual)}'
                 
                 lista_prod.append(f"<b>{qtd_pedida}x</b> [{sku}] {desc}<br><span style='color:{cor};font-weight:bold;'>{status}</span>")
             
