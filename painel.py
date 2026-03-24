@@ -7,14 +7,14 @@ import re
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime, timedelta
 
-# Configuração de Log
+# Configuração de Log para o Render
 logging.basicConfig(stream=sys.stderr, level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 # =========================================================
-# CONFIGURAÇÃO MULTI-EMPRESA
+# CONFIGURAÇÃO MULTI-EMPRESA (TOKENS ATUALIZADOS)
 # =========================================================
 CONFIG_EMPRESAS = {
     "39544860000121": {
@@ -78,21 +78,26 @@ def buscar_detalhes_tiny(id_pedido, token):
 def gerar_sugestoes_compra():
     sugestoes = {"ERACKS": [], "F2": [], "AGRO": []}
     vistos = set()
-    mapeamento = [
-        ("pedidos_eracks.json", "39544860000121", "ERACKS"), 
-        ("pedidos_f2.json", "09653335000183", "F2"), 
-        ("pedidos_agro.json", "07093835000182", "AGRO")
-    ]
+    agora = datetime.now()
+    mapeamento = [("pedidos_eracks.json", "39544860000121", "ERACKS"), 
+                  ("pedidos_f2.json", "09653335000183", "F2"), 
+                  ("pedidos_agro.json", "07093835000182", "AGRO")]
+    
     for arq, cnpj, nome_empresa in mapeamento:
         pedidos = carregar_dados(arq)
         token = CONFIG_EMPRESAS[cnpj]['token']
         for p in pedidos:
+            try:
+                chegada_dt = datetime.fromisoformat(p.get('chegada'))
+                if (agora - chegada_dt).total_seconds() > 86400: continue
+            except: continue
+
             skus = re.findall(r"\[(.*?)\]", p.get('produtos', ''))
             for sku in skus:
                 chave = f"{nome_empresa}_{sku}"
                 if chave not in vistos:
                     estoque = buscar_estoque(sku, token)
-                    if estoque <= 1: # ESTOQUE MÍNIMO: 1
+                    if estoque <= 1:
                         sugestoes[nome_empresa].append({"sku": sku, "estoque": int(estoque)})
                     vistos.add(chave)
     return sugestoes
@@ -141,8 +146,10 @@ def webhook_tiny():
         salvar_dados(pedidos, config['arquivo'])
         return jsonify({"status": "success"}), 200
     except Exception as e:
-        logger.error(f"Erro: {e}")
+        logger.error(f"Erro Webhook: {e}")
         return jsonify({"status": "error"}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+    # PORTA DINÂMICA PARA O RENDER
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
