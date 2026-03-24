@@ -24,7 +24,7 @@ CONFIG_EMPRESAS = {
     "09653335000183": {
         "slug": "f2",
         "arquivo": "pedidos_f2.json",
-        "token": "COLOQUE_AQUI_O_TOKEN_DA_F2" 
+        "token": "642e5d6355abd64b35a6bf6d871b5608db1647ca" 
     },
     "07093835000182": {
         "slug": "agrosensores",
